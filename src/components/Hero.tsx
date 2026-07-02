@@ -1,92 +1,37 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Card, Spacer, Text } from '@geist-ui/core';
-import {
-  useAccount,
-  useChainId,
-  useConnect,
-  useDisconnect,
-  useSwitchChain,
-  type Connector,
-} from 'wagmi';
-import { Wallet, AlertCircle, ExternalLink, Loader2, Power } from 'lucide-react';
-import { walletConnectService } from '../services/walletConnectService';
+import { Wallet, AlertCircle, ExternalLink, Power } from 'lucide-react';
+import { useWallet } from '../hooks/useWallet';
 
 const ActionButton = Button as React.ComponentType<any>;
 
 const Hero: React.FC = () => {
-  const { address, status } = useAccount();
-  const chainId = useChainId();
-  const { connectors, connect, isPending: isConnecting, error: connectError } = useConnect();
-  const { disconnectAsync, isPending: isDisconnecting } = useDisconnect();
-  const { switchChain, chains: switchableChains, isPending: isSwitching } = useSwitchChain();
-  const [selectedConnectorId, setSelectedConnectorId] = useState<string | null>(null);
+  const { address, isConnected, networkLabel, connect, disconnect } = useWallet();
   const [wcLoading, setWcLoading] = useState(false);
   const [wcError, setWcError] = useState<string | null>(null);
-  const [showNetworks, setShowNetworks] = useState(false);
-
-  const isConnected = status === 'connected' && Boolean(address);
-
-  useEffect(() => {
-    if (!isConnecting) {
-      setSelectedConnectorId(null);
-    }
-  }, [isConnecting]);
 
   const handleWalletConnect = async () => {
     setWcLoading(true);
     setWcError(null);
     try {
-      await walletConnectService.connectWithQrModal();
+      await connect();
     } catch (err) {
       setWcError(
-        err instanceof Error ? err.message : 'Failed to open WalletConnect. Please try again.'
+        err instanceof Error ? err.message : 'Failed to connect. Please try again.'
       );
     } finally {
       setWcLoading(false);
     }
   };
 
-  const connectorIdentifier = (connector: Connector) =>
-    (connector as Connector & { uid?: string }).uid ?? connector.id;
+  const handleDisconnect = async () => {
+    await disconnect();
+  };
 
-  const readyConnectors = useMemo(
-    () => connectors.filter((connector) => connector.type !== 'mock'),
-    [connectors]
-  );
-
-  const formatAddress = (addr: string | undefined) => {
+  const formatAddress = (addr: string | null) => {
     if (!addr) return '';
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
-
-  const getNetworkName = (id: number | undefined) => {
-    if (!id) return 'Unknown Network';
-    switch (id) {
-      case 8453:
-        return 'Base Mainnet';
-      case 84532:
-        return 'Base Sepolia';
-      default:
-        return `Chain ${id}`;
-    }
-  };
-
-  const toggleNetworks = () => setShowNetworks((prev) => !prev);
-
-  const handleConnect = (connector: Connector) => {
-    const id = connectorIdentifier(connector);
-    setSelectedConnectorId(id);
-    connect({ connector });
-  };
-
-  const handleDisconnect = async () => {
-    setShowNetworks(false);
-    await disconnectAsync();
-  };
-
-  const handleSwitchChain = (targetId: number) => {
-    switchChain?.({ chainId: targetId });
   };
 
   return (
@@ -152,44 +97,22 @@ const Hero: React.FC = () => {
                     </motion.div>
                     <div>
                       <Text h3 className="mb-1">🎉 Wallet Connected</Text>
-                      <Text small type="secondary">{getNetworkName(chainId)}</Text>
+                      <Text small type="secondary">{networkLabel}</Text>
                     </div>
                     <div className="bg-white/50 dark:bg-neutral-800/50 rounded-xl p-4 text-left">
                       <Text small type="secondary">Wallet Address</Text>
                       <Text className="font-mono text-base-blue break-all">{formatAddress(address)}</Text>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3">
                       <ActionButton
                         auto
                         scale={1}
                         icon={<Power className="w-4 h-4" />}
                         onClick={handleDisconnect}
-                        disabled={isDisconnecting}
                       >
-                        {isDisconnecting ? 'Disconnecting...' : 'Disconnect Wallet'}
+                        Disconnect Wallet
                       </ActionButton>
-                      {switchableChains.length > 0 && (
-                        <ActionButton auto ghost scale={1} onClick={toggleNetworks}>
-                          {showNetworks ? 'Hide Networks' : 'Network Settings'}
-                        </ActionButton>
-                      )}
                     </div>
-                    {showNetworks && switchableChains.length > 0 && (
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {switchableChains.map((chain) => (
-                          <ActionButton
-                            key={chain.id}
-                            auto
-                            scale={1}
-                            onClick={() => handleSwitchChain(chain.id)}
-                            disabled={isSwitching}
-                            type={chain.id === chainId ? 'success' : 'secondary'}
-                          >
-                            {chain.name}
-                          </ActionButton>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </Card.Content>
               </Card>
@@ -217,38 +140,24 @@ const Hero: React.FC = () => {
                       </div>
                     </div>
                     <div className="grid gap-3">
-                      {readyConnectors.map((connector) => {
-                        const connectorId = connectorIdentifier(connector);
-                        const isPending = isConnecting && selectedConnectorId === connectorId;
-                        return (
-                          <ActionButton
-                            key={connectorId}
-                            auto
-                            scale={1}
-                            className="w-full"
-                            disabled={!connector.ready || isPending}
-                            onClick={() => handleConnect(connector)}
-                          >
-                            {isPending ? (
-                              <span className="flex items-center gap-2 justify-center">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Connecting to {connector.name}...
-                              </span>
-                            ) : (
-                              `Connect with ${connector.name}`
-                            )}
-                          </ActionButton>
-                        );
-                      })}
+                      <ActionButton
+                        auto
+                        scale={1}
+                        className="w-full"
+                        onClick={handleWalletConnect}
+                        loading={wcLoading}
+                      >
+                        Connect Wallet
+                      </ActionButton>
                     </div>
                     <Text small type="secondary">
                       💡 Works with WalletConnect, MetaMask, Coinbase Wallet and more.
                     </Text>
-                    {connectError && (
+                    {wcError && (
                       <div className="bg-error/10 border border-error/20 rounded-xl p-3 flex items-center gap-2 text-error">
                         <AlertCircle className="w-4 h-4" />
                         <Text small type="error">
-                          {connectError.message}
+                          {wcError}
                         </Text>
                       </div>
                     )}
@@ -259,27 +168,6 @@ const Hero: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <Spacer h={1} />
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-        <ActionButton
-          auto
-          ghost
-          icon={<ExternalLink size={16} />}
-          disabled={wcLoading}
-          onClick={handleWalletConnect}
-        >
-          {wcLoading ? 'Opening WalletConnect…' : 'WalletConnect QR'}
-        </ActionButton>
-      </div>
-      {wcError && (
-        <div className="mt-4 flex items-center justify-center gap-2 text-error">
-          <AlertCircle className="w-4 h-4" />
-          <Text small type="error">
-            {wcError}
-          </Text>
-        </div>
-      )}
     </motion.div>
   );
 };
