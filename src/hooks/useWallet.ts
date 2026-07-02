@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { EvmProvider } from '../chain/evm/provider';
-import { watchAccount, watchBlockNumber } from '@wagmi/core';
+import { StellarProvider } from '../chain/stellar/provider';
+import { watchAccount } from '@wagmi/core';
 import { wagmiConfig } from '../config/wagmiConfig';
 import { ChainProvider } from '../chain/types';
 
-// Singleton instance for now
-const provider: ChainProvider = new EvmProvider();
+const IS_STELLAR = import.meta.env.VITE_CHAIN === 'stellar';
+
+// Singleton instance dynamically selected
+const provider: ChainProvider = IS_STELLAR ? new StellarProvider() : new EvmProvider();
 
 export function useWallet() {
   const [address, setAddress] = useState<string | null>(provider.getAddress());
@@ -35,20 +38,25 @@ export function useWallet() {
     // Initial fetch
     fetchBalance();
 
-    const unwatchAccount = watchAccount(wagmiConfig, {
-      onChange() {
-        setAddress(provider.getAddress());
-        setIsConnected(provider.isConnected());
-        setNetworkLabel(provider.getNetworkLabel());
-        fetchBalance();
-      },
-    });
+    let unwatchAccount: (() => void) | undefined;
+    
+    // Wagmi's watchAccount is only relevant for the EvmProvider
+    if (!IS_STELLAR) {
+      unwatchAccount = watchAccount(wagmiConfig, {
+        onChange() {
+          setAddress(provider.getAddress());
+          setIsConnected(provider.isConnected());
+          setNetworkLabel(provider.getNetworkLabel());
+          fetchBalance();
+        },
+      });
+    }
 
     // Refresh balance periodically (e.g. every 30s)
     const interval = setInterval(fetchBalance, 30_000);
 
     return () => {
-      unwatchAccount();
+      if (unwatchAccount) unwatchAccount();
       clearInterval(interval);
     };
   }, [fetchBalance]);

@@ -1,4 +1,4 @@
-# 🧩 StellarConnect (formerly BaseConnect)
+# 🧩 StellarConnect
 
 A modern, lightweight dApp that enables seamless wallet connection. Originally built for the Base blockchain, this application is currently undergoing a migration to the Stellar network.
 
@@ -37,6 +37,24 @@ npm install
 
 # Start development server
 npm run dev
+```
+
+### Environment Setup
+
+Create a `.env` file in the root directory to toggle the active chain:
+
+```env
+# Switch between EVM and Stellar
+VITE_CHAIN=stellar # or 'evm' (defaults to evm if omitted)
+
+# Stellar configuration
+VITE_STELLAR_NETWORK=testnet # or 'mainnet'
+
+# Base Network RPC (if using EVM)
+VITE_BASE_RPC_URL=https://mainnet.base.org
+
+# Optional: Alchemy API Key for enhanced EVM features
+VITE_ALCHEMY_API_KEY=your_alchemy_key_here
 ```
 
 ## 🛠️ Architecture (Migration in Progress)

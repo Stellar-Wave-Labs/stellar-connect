@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Card, Spacer, Text } from '@geist-ui/core';
 import { Wallet, AlertCircle, ExternalLink, Power } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
+import { formatAddress, isValidAddress } from '../utils/address';
 
 const ActionButton = Button as React.ComponentType<any>;
 
@@ -27,11 +28,6 @@ const Hero: React.FC = () => {
 
   const handleDisconnect = async () => {
     await disconnect();
-  };
-
-  const formatAddress = (addr: string | null) => {
-    if (!addr) return '';
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
   return (
