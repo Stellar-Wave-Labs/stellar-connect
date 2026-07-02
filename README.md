@@ -39,6 +39,24 @@ npm install
 npm run dev
 ```
 
+### Environment Setup
+
+Create a `.env` file in the root directory to toggle the active chain:
+
+```env
+# Switch between EVM and Stellar
+VITE_CHAIN=stellar # or 'evm' (defaults to evm if omitted)
+
+# Stellar configuration
+VITE_STELLAR_NETWORK=testnet # or 'mainnet'
+
+# Base Network RPC (if using EVM)
+VITE_BASE_RPC_URL=https://mainnet.base.org
+
+# Optional: Alchemy API Key for enhanced EVM features
+VITE_ALCHEMY_API_KEY=your_alchemy_key_here
+```
+
 ## 🛠️ Architecture (Migration in Progress)
 
 The codebase has been refactored to abstract the underlying blockchain logic behind a generic `ChainProvider` interface. This allows the application to cleanly swap out the current EVM/Base provider with a new Stellar provider in the upcoming migration phases, without affecting the UI components.
