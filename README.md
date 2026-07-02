@@ -1,4 +1,4 @@
-# 🧩 StellarConnect (formerly BaseConnect)
+# 🧩 StellarConnect
 
 A modern, lightweight dApp that enables seamless wallet connection. Originally built for the Base blockchain, this application is currently undergoing a migration to the Stellar network.
 
