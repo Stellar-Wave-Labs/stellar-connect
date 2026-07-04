@@ -1,5 +1,6 @@
 import type { ChainProvider } from '../types';
-import { StellarWalletsKit, WalletNetwork } from '@creit.tech/stellar-wallets-kit';
+import { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
+import { Networks } from '@creit.tech/stellar-wallets-kit/types';
 import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
 import { xBullModule } from '@creit.tech/stellar-wallets-kit/modules/xbull';
 import { RabetModule } from '@creit.tech/stellar-wallets-kit/modules/rabet';
@@ -14,7 +15,7 @@ export class StellarProvider implements ChainProvider {
     // v2.x API: no `modules` array in constructor.
     // Wallets are registered separately via openModal's allowedWallets list.
     this.kit = new StellarWalletsKit({
-      network: ACTIVE_STELLAR_NETWORK === 'MAINNET' ? WalletNetwork.PUBLIC : WalletNetwork.TESTNET,
+      network: ACTIVE_STELLAR_NETWORK === 'MAINNET' ? Networks.PUBLIC : Networks.TESTNET,
       selectedWalletId: 'freighter',
       modules: [
         new FreighterModule(),
