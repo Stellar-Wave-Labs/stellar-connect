@@ -48,8 +48,9 @@ export class StellarProvider implements ChainProvider {
 
   async disconnect(): Promise<void> {
     try {
-      if ('disconnect' in this.kit && typeof (this.kit as any).disconnect === 'function') {
-        await (this.kit as any).disconnect();
+      const kitWithDisconnect = this.kit as { disconnect?: () => Promise<void> };
+      if (typeof kitWithDisconnect.disconnect === 'function') {
+        await kitWithDisconnect.disconnect();
       }
     } catch (e) {
       console.warn('Failed to disconnect kit natively, falling back to state clearing', e);

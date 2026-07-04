@@ -25,8 +25,7 @@ const InteractiveBubbles: React.FC = () => {
     const bubbles: Bubble[] = [];
 
     // Create different types of bubbles
-    // @ts-ignore
-    const createBubble = (type: 'small' | 'medium' | 'large', index: number): Bubble => {
+    const createBubble = (type: 'small' | 'medium' | 'large'): Bubble => {
       const bubble = document.createElement('div');
       bubble.className = 'absolute rounded-full pointer-events-none';
 
@@ -84,7 +83,7 @@ const InteractiveBubbles: React.FC = () => {
     // Create bubbles
     for (let i = 0; i < 8; i++) {
       const type = i < 3 ? 'large' : i < 6 ? 'medium' : 'small';
-      bubbles.push(createBubble(type, i));
+      bubbles.push(createBubble(type));
     }
 
     bubblesRef.current = bubbles;
@@ -150,7 +149,7 @@ const InteractiveBubbles: React.FC = () => {
 
     // Click interaction - create new bubble
     const handleClick = (e: MouseEvent) => {
-      const newBubble = createBubble('small', bubbles.length);
+      const newBubble = createBubble('small');
       newBubble.x = e.clientX - newBubble.size / 2;
       newBubble.y = e.clientY - newBubble.size / 2;
       newBubble.vx = (Math.random() - 0.5) * 4;

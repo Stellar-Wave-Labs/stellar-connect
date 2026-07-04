@@ -25,7 +25,7 @@ export class EvmProvider implements ChainProvider {
     
     try {
       await disconnect(wagmiConfig);
-    } catch (e) {
+    } catch {
       // Ignore errors if wagmi is already disconnected
     }
   }

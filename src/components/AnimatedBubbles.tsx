@@ -95,8 +95,7 @@ const AnimatedBubbles: React.FC = () => {
 
     // Mouse interaction - bubbles move away from cursor
     const handleMouseMove = (e: MouseEvent) => {
-      // @ts-ignore
-      bubbles.forEach((bubble, index) => {
+      bubbles.forEach((bubble) => {
         const rect = bubble.getBoundingClientRect();
         const bubbleCenterX = rect.left + rect.width / 2;
         const bubbleCenterY = rect.top + rect.height / 2;

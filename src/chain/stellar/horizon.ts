@@ -28,9 +28,10 @@ export async function getXlmBalance(address: string): Promise<{ amount: string; 
     
     // Account exists but somehow no native balance entry (extremely rare in Stellar)
     return { amount: '0', symbol: 'XLM', exists: true };
-  } catch (error: any) {
+  } catch (error) {
+    const err = error as { response?: { status?: number }; name?: string };
     // If account doesn't exist on-chain (unfunded), return 0 without throwing
-    if (error?.response?.status === 404 || error?.name === 'NotFoundError') {
+    if (err?.response?.status === 404 || err?.name === 'NotFoundError') {
       return {
         amount: '0',
         symbol: 'XLM',

@@ -53,6 +53,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWalletContext = () => {
   const context = useContext(WalletContext);
   if (!context) {
