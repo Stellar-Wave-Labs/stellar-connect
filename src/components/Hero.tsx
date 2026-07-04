@@ -9,11 +9,9 @@ import { formatAddress } from '../utils/address';
 const ActionButton = Button as React.ComponentType<any>;
 
 const Hero: React.FC = () => {
-  const { address, isConnected, networkLabel, connect, disconnect, activeChain } = useWallet();
+  const { address, isConnected, networkLabel, connect, disconnect } = useWallet();
   const [wcLoading, setWcLoading] = useState(false);
   const [wcError, setWcError] = useState<string | null>(null);
-
-  const isStellar = activeChain === 'stellar';
 
   const handleWalletConnect = async () => {
     setWcLoading(true);
@@ -41,46 +39,24 @@ const Hero: React.FC = () => {
       transition={{ duration: 0.6 }}
     >
       <div className="mb-8 max-w-2xl mx-auto px-4">
-        {/* Hero Icon — Stellar logo on Stellar, Base logo on Base */}
+        {/* Hero Icon — Stellar logo */}
         <div className="inline-flex items-center justify-center w-20 h-20 bg-white dark:bg-neutral-800 rounded-2xl mb-6 mx-auto overflow-hidden p-3 shadow-lg border border-neutral-200 dark:border-neutral-700">
-          <AnimatePresence mode="wait">
-            {isStellar ? (
-              <motion.img
-                key="stellar"
-                src="/stellar.png"
-                alt="Stellar"
-                className="w-14 h-14 object-contain"
-                initial={{ opacity: 0, scale: 0.7, rotate: -20 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, scale: 0.7, rotate: 20 }}
-                transition={{ duration: 0.4, type: 'spring', stiffness: 280 }}
-              />
-            ) : (
-              <motion.img
-                key="base"
-                src="/base.png"
-                alt="Base"
-                className="w-12 h-12 object-contain"
-                initial={{ opacity: 0, scale: 0.7, rotate: -20 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, scale: 0.7, rotate: 20 }}
-                transition={{ duration: 0.4, type: 'spring', stiffness: 280 }}
-              />
-            )}
-          </AnimatePresence>
+          <motion.img
+            src="/stellar.png"
+            alt="Stellar"
+            className="w-14 h-14 object-contain"
+            initial={{ opacity: 0, scale: 0.7, rotate: -20 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ duration: 0.4, type: 'spring', stiffness: 280 }}
+          />
         </div>
 
         <div className="max-w-xl mx-auto">
-          <h1
-            className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4"
-            style={{ color: isStellar ? '#ffffff' : undefined }}
-          >
-            {isStellar ? 'StellarConnect' : 'BaseConnect'}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 text-white">
+            StellarConnect
           </h1>
-          <p className="text-lg sm:text-xl" style={{ color: isStellar ? '#a0b4d0' : undefined }}>
-            {isStellar
-              ? 'Connect your wallet to the Stellar network. View XLM balances and explore the Stellar ecosystem.'
-              : 'Connect your wallet to Base network with ease. View balances, manage assets, and explore the Base ecosystem seamlessly.'}
+          <p className="text-lg sm:text-xl text-[#a0b4d0]">
+            Connect your wallet to the Stellar network. View XLM balances and explore the Stellar ecosystem.
           </p>
         </div>
       </div>
@@ -105,9 +81,7 @@ const Hero: React.FC = () => {
                       transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
                     >
                       <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center shadow-lg p-3">
-                        {isStellar
-                          ? <img src="/stellar.png" alt="Stellar" className="w-10 h-10 object-contain" />
-                          : <img src="/base.png" alt="Base" className="w-10 h-10 object-contain" />}
+                        <img src="/stellar.png" alt="Stellar" className="w-10 h-10 object-contain" />
                       </div>
                     </motion.div>
                     <div>
@@ -147,16 +121,12 @@ const Hero: React.FC = () => {
                   <div className="flex flex-col gap-6 max-w-xl mx-auto">
                     <div className="flex items-center gap-4 justify-center">
                       <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center p-3">
-                        {isStellar
-                          ? <img src="/stellar.png" alt="Stellar" className="w-10 h-10 object-contain" />
-                          : <img src="/base.png" alt="Base" className="w-10 h-10 object-contain" />}
+                        <img src="/stellar.png" alt="Stellar" className="w-10 h-10 object-contain" />
                       </div>
                       <div className="text-left">
                         <Text h3 className="mb-0">Connect your wallet</Text>
                         <Text small type="secondary">
-                          {isStellar
-                            ? 'Securely authenticate with Stellar in seconds.'
-                            : 'Securely authenticate with Base in seconds.'}
+                          Securely authenticate with Stellar in seconds.
                         </Text>
                       </div>
                     </div>
@@ -172,9 +142,7 @@ const Hero: React.FC = () => {
                       </ActionButton>
                     </div>
                     <Text small type="secondary">
-                      {isStellar
-                        ? '💡 Works with Freighter, xBull, Rabet and more.'
-                        : '💡 Works with WalletConnect, MetaMask, Coinbase Wallet and more.'}
+                      💡 Works with Freighter, xBull, Rabet and more.
                     </Text>
                     {wcError && (
                       <div className="bg-error/10 border border-error/20 rounded-xl p-3 flex items-center gap-2 text-error">

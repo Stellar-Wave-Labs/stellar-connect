@@ -10,13 +10,8 @@
   font-display: swap;
 }
 
-/* BaseConnect Custom Styles */
+/* StellarConnect Custom Theme Styles */
 @theme {
-  /* === Base (EVM) Colors === */
-  --color-base-blue: #0052FF;
-  --color-base-light-blue: #3B99FC;
-  --color-base-dark-blue: #0039CC;
-
   /* === Stellar Colors === */
   --color-stellar-black: #000000;
   --color-stellar-blue: #0096FF;
@@ -24,19 +19,22 @@
   --color-stellar-indigo: #3E1BDB;
   --color-stellar-dark: #080B1A;
 
-  /* === Semantic Tokens (swapped by chain) === */
-  --color-chain-primary: #0052FF;
-  --color-chain-primary-light: #3B99FC;
-  --color-chain-primary-dark: #0039CC;
-  --color-chain-bg-gradient-from: #f0f4ff;
-  --color-chain-bg-gradient-to: #dbeafe;
+  /* === Root Semantic Colors (Locked to Stellar Branding) === */
+  --color-base-blue: #0096FF;
+  --color-base-light-blue: #00D4FF;
+  --color-base-dark-blue: #3E1BDB;
+  --color-text-accent: #0096FF;
+  --color-chain-primary: #0096FF;
+  --color-chain-primary-light: #00D4FF;
+  --color-chain-primary-dark: #3E1BDB;
+  --color-chain-bg-gradient-from: #000005;
+  --color-chain-bg-gradient-to: #080B1A;
 
   --color-success: #00D4AA;
   --color-warning: #FF6B35;
   --color-error: #FF3B30;
   --color-text-primary: #1C1C1E;
   --color-text-secondary: #8E8E93;
-  --color-text-accent: #0052FF;
   --color-neutral-50: #F8F9FA;
   --color-neutral-100: #F1F3F4;
   --color-neutral-200: #E8EAED;
@@ -65,22 +63,6 @@
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* === Stellar Theme Override ===
-   Applied to <html> when activeChain === 'stellar'.
-   Overrides the semantic --color-base-* tokens so every component
-   automatically picks up Stellar branding with no JSX changes. */
-:root.stellar-theme {
-  --color-base-blue: #0096FF;
-  --color-base-light-blue: #00D4FF;
-  --color-base-dark-blue: #3E1BDB;
-  --color-text-accent: #0096FF;
-  --color-chain-primary: #0096FF;
-  --color-chain-primary-light: #00D4FF;
-  --color-chain-primary-dark: #3E1BDB;
-  --color-chain-bg-gradient-from: #000005;
-  --color-chain-bg-gradient-to: #080B1A;
-}
-
 @keyframes fadeIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
@@ -95,11 +77,7 @@
 body {
   font-family: var(--font-family-sans);
   min-height: 100vh;
-  /* transition: background 0.3s ease, color 0.3s ease; */
-  /* color: #1C1C1E; */
 }
-
-/* Dark mode text color */
 
 /* Custom utility classes */
 .text-base-blue { color: var(--color-base-blue); }
