@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useWalletContext } from '../providers/WalletProvider';
-import { watchAccount } from '@wagmi/core';
-import { wagmiConfig } from '../config/wagmiConfig';
 import type { BalanceInfo } from '../chain/types';
 
 export function useWallet() {
-  const { provider, activeChain, switchChain } = useWalletContext();
+  const { provider, activeChain } = useWalletContext();
   
   const [address, setAddress] = useState<string | null>(provider.getAddress());
   const [isConnected, setIsConnected] = useState<boolean>(provider.isConnected());
@@ -39,28 +37,13 @@ export function useWallet() {
   }, [provider, fetchBalance]);
 
   useEffect(() => {
-    let unwatchAccount: (() => void) | undefined;
-    
-    // Wagmi's watchAccount is only relevant for the EvmProvider
-    if (activeChain === 'evm') {
-      unwatchAccount = watchAccount(wagmiConfig, {
-        onChange() {
-          setAddress(provider.getAddress());
-          setIsConnected(provider.isConnected());
-          setNetworkLabel(provider.getNetworkLabel());
-          fetchBalance();
-        },
-      });
-    }
-
     // Refresh balance periodically (e.g. every 30s)
     const interval = setInterval(fetchBalance, 30_000);
 
     return () => {
-      if (unwatchAccount) unwatchAccount();
       clearInterval(interval);
     };
-  }, [provider, activeChain, fetchBalance]);
+  }, [fetchBalance]);
 
   return {
     address,
@@ -69,7 +52,6 @@ export function useWallet() {
     isConnected,
     isFetching,
     activeChain,
-    switchChain,
     refreshBalance: fetchBalance,
     connect: async () => {
       await provider.connect();
