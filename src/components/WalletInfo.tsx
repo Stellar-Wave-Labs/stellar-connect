@@ -21,7 +21,7 @@ const ActionButton = Button as React.ComponentType<any>;
 const WalletInfo: React.FC = () => {
   const {
     address,
-    balance,
+    balances,
     networkLabel,
     isConnected,
     isFetching,
@@ -36,9 +36,12 @@ const WalletInfo: React.FC = () => {
   // Form State
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
+  const [selectedAssetIndex, setSelectedAssetIndex] = useState(0);
   const [sending, setSending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
+
+  const activeBalance = balances[selectedAssetIndex] || null;
 
   useEffect(() => {
     if (!cardRef.current) return;
@@ -56,6 +59,7 @@ const WalletInfo: React.FC = () => {
     setAmount('');
     setTxHash(null);
     setTxError(null);
+    setSelectedAssetIndex(0);
   }, [activeChain]);
 
   const copyAddress = async () => {
@@ -79,7 +83,7 @@ const WalletInfo: React.FC = () => {
   };
 
   const handleSend = async () => {
-    if (!recipient || !amount) return;
+    if (!recipient || !amount || !activeBalance) return;
 
     const { isValidAddress } = await import('../utils/address');
     if (!isValidAddress(recipient)) {
@@ -92,7 +96,12 @@ const WalletInfo: React.FC = () => {
     setTxHash(null);
 
     try {
-      const result = await sendTransaction(recipient, amount);
+      const result = await sendTransaction(
+        recipient,
+        amount,
+        activeBalance.isNative ? undefined : activeBalance.code,
+        activeBalance.isNative ? undefined : activeBalance.issuer
+      );
       setTxHash(result.hash);
       setRecipient('');
       setAmount('');
@@ -104,8 +113,7 @@ const WalletInfo: React.FC = () => {
     }
   };
 
-  const balanceDisplay = balance ? `${balance.amount} ${balance.symbol}` : '--';
-  const loadingSkeleton = isFetching && !balance;
+  const loadingSkeleton = isFetching && balances.length === 0;
 
   if (loadingSkeleton) {
     return (
@@ -222,29 +230,45 @@ const WalletInfo: React.FC = () => {
 
             <Grid xs={24} md={12}>
               <div className="w-full bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-700 h-full">
-                <Text small type="secondary" className="flex items-center gap-2 mb-1">
-                  <Coins className="w-4 h-4" />
-                  Balance
-                </Text>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Text h3 className="mb-0">
-                      {balanceDisplay}
-                    </Text>
-                    <Text small type="secondary">
-                      Updated automatically every 30 seconds
-                    </Text>
-                  </div>
+                <div className="flex items-center justify-between mb-2">
+                  <Text small type="secondary" className="flex items-center gap-2 mb-0">
+                    <Coins className="w-4 h-4" />
+                    Balances
+                  </Text>
                   <ActionButton
                     auto
-                    scale={0.8}
-                    icon={<RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />}
+                    scale={0.7}
+                    icon={<RefreshCw size={12} className={isFetching ? 'animate-spin' : ''} />}
                     loading={isFetching}
                     onClick={refreshBalance}
                     type="secondary"
                   >
                     Refresh
                   </ActionButton>
+                </div>
+
+                <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
+                  {balances.length === 0 ? (
+                    <Text small type="secondary">No balances loaded</Text>
+                  ) : (
+                    balances.map((bal, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-white dark:bg-neutral-800 p-2 rounded-xl border border-neutral-100 dark:border-neutral-700">
+                        <div className="min-w-0 flex-1 pr-2">
+                          <Text className="font-bold mb-0 text-sm">{bal.amount} {bal.symbol}</Text>
+                          {!bal.isNative && bal.issuer && (
+                            <Text className="text-[10px] text-text-secondary font-mono truncate block" title={bal.issuer}>
+                              Issuer: {bal.issuer}
+                            </Text>
+                          )}
+                        </div>
+                        {bal.isNative ? (
+                          <Tag type="secondary" scale={0.5} invert className="shrink-0">Native</Tag>
+                        ) : (
+                          <Tag type="warning" scale={0.5} invert className="shrink-0">Token</Tag>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </Grid>
@@ -258,6 +282,28 @@ const WalletInfo: React.FC = () => {
                 </Text>
 
                 <div className="space-y-4">
+                  {/* Asset Select Dropdown */}
+                  {balances.length > 1 && (
+                    <div>
+                      <label className="block text-xs text-text-secondary mb-1">Select Asset</label>
+                      <select
+                        value={selectedAssetIndex}
+                        onChange={(e) => {
+                          setSelectedAssetIndex(Number(e.target.value));
+                          setTxError(null);
+                          setTxHash(null);
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-base-blue text-sm text-text-primary focus:border-transparent"
+                      >
+                        {balances.map((bal, idx) => (
+                          <option key={idx} value={idx}>
+                            {bal.symbol} (Bal: {bal.amount})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs text-text-secondary mb-1">Recipient Address</label>
                     <input
@@ -288,10 +334,10 @@ const WalletInfo: React.FC = () => {
                         placeholder="0.0"
                         className="flex-1 px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-base-blue text-sm text-text-primary"
                       />
-                      {balance && (
+                      {activeBalance && (
                         <button
                           type="button"
-                          onClick={() => setAmount(balance.amount)}
+                          onClick={() => setAmount(activeBalance.amount)}
                           className="px-3 py-2 bg-neutral-200 dark:bg-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-500 rounded-xl text-xs font-semibold transition-colors text-text-primary"
                         >
                           Max

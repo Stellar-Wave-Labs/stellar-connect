@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWalletContext } from '../providers/WalletProvider';
 import { watchAccount } from '@wagmi/core';
 import { wagmiConfig } from '../config/wagmiConfig';
+import type { BalanceInfo } from '../chain/types';
 
 export function useWallet() {
   const { provider, activeChain, switchChain } = useWalletContext();
@@ -9,7 +10,7 @@ export function useWallet() {
   const [address, setAddress] = useState<string | null>(provider.getAddress());
   const [isConnected, setIsConnected] = useState<boolean>(provider.isConnected());
   const [networkLabel, setNetworkLabel] = useState<string>(provider.getNetworkLabel());
-  const [balance, setBalance] = useState<{ amount: string; symbol: string } | null>(null);
+  const [balances, setBalances] = useState<BalanceInfo[]>([]);
   const [isFetching, setIsFetching] = useState(false);
 
   const fetchBalance = useCallback(async () => {
@@ -17,15 +18,15 @@ export function useWallet() {
     if (currentAddress) {
       setIsFetching(true);
       try {
-        const bal = await provider.getBalance(currentAddress);
-        setBalance(bal);
+        const bal = await provider.getBalances(currentAddress);
+        setBalances(bal);
       } catch (e) {
         console.error(e);
       } finally {
         setIsFetching(false);
       }
     } else {
-      setBalance(null);
+      setBalances([]);
     }
   }, [provider]);
 
@@ -63,7 +64,7 @@ export function useWallet() {
 
   return {
     address,
-    balance,
+    balances,
     networkLabel,
     isConnected,
     isFetching,
@@ -81,10 +82,10 @@ export function useWallet() {
       await provider.disconnect();
       setAddress(null);
       setIsConnected(false);
-      setBalance(null);
+      setBalances([]);
     },
-    sendTransaction: async (to: string, amount: string) => {
-      const result = await provider.sendTransaction(to, amount);
+    sendTransaction: async (to: string, amount: string, assetCode?: string, assetIssuer?: string) => {
+      const result = await provider.sendTransaction(to, amount, assetCode, assetIssuer);
       fetchBalance();
       return result;
     },

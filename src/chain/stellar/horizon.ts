@@ -18,23 +18,26 @@ export const server = new StellarSdk.Horizon.Server(HORIZON_URL);
 export async function getStellarBalances(address: string): Promise<{ balances: BalanceInfo[]; exists: boolean }> {
   try {
     const account = await server.loadAccount(address);
-    const mapped: BalanceInfo[] = account.balances.map((b) => {
-      if (b.asset_type === 'native') {
-        return {
-          amount: Number(b.balance).toFixed(4),
-          symbol: 'XLM',
-          isNative: true,
-        };
-      } else {
-        return {
-          amount: Number(b.balance).toFixed(4),
-          symbol: b.asset_code || 'UNKNOWN',
-          code: b.asset_code,
-          issuer: b.asset_issuer,
-          isNative: false,
-        };
-      }
-    });
+    const mapped: BalanceInfo[] = account.balances
+      .filter((b) => b.asset_type !== 'liquidity_pool_shares')
+      .map((b) => {
+        if (b.asset_type === 'native') {
+          return {
+            amount: Number(b.balance).toFixed(4),
+            symbol: 'XLM',
+            isNative: true,
+          };
+        } else {
+          const assetBalance = b as { asset_code?: string; asset_issuer?: string; balance: string };
+          return {
+            amount: Number(assetBalance.balance).toFixed(4),
+            symbol: assetBalance.asset_code || 'UNKNOWN',
+            code: assetBalance.asset_code,
+            issuer: assetBalance.asset_issuer,
+            isNative: false,
+          };
+        }
+      });
 
     return { balances: mapped, exists: true };
   } catch (error) {
