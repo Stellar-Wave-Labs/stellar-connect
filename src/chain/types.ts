@@ -27,4 +27,5 @@ export interface ChainProvider {
   sendTransaction(to: string, amount: string, assetCode?: string, assetIssuer?: string): Promise<{ hash: string }>;
   getRecentPayments(address: string): Promise<PaymentRecord[]>;
   addTrustline(assetCode: string, assetIssuer: string): Promise<{ hash: string }>;
+  fundAccount(address: string): Promise<boolean>;
 }
