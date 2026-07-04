@@ -8,13 +8,10 @@ import { ACTIVE_STELLAR_NETWORK, ACTIVE_STELLAR_PASSPHRASE, getNetworkLabel } fr
 import { getXlmBalance } from './horizon';
 
 export class StellarProvider implements ChainProvider {
-  private kit: StellarWalletsKit;
   private currentAddress: string | null = null;
 
   constructor() {
-    // v2.x API: no `modules` array in constructor.
-    // Wallets are registered separately via openModal's allowedWallets list.
-    this.kit = new StellarWalletsKit({
+    StellarWalletsKit.init({
       network: ACTIVE_STELLAR_NETWORK === 'MAINNET' ? Networks.PUBLIC : Networks.TESTNET,
       selectedWalletId: 'freighter',
       modules: [
@@ -26,36 +23,17 @@ export class StellarProvider implements ChainProvider {
   }
 
   async connect(): Promise<{ address: string }> {
-    return new Promise((resolve, reject) => {
-      this.kit.openModal({
-        onWalletSelected: async (option) => {
-          try {
-            this.kit.setWallet(option.id);
-            const { address } = await this.kit.getAddress();
-            this.currentAddress = address;
-            resolve({ address });
-          } catch (e) {
-            reject(e);
-          }
-        },
-        onClosed: (error) => {
-          if (error) reject(error);
-          else reject(new Error('Wallet selection was closed.'));
-        }
-      });
-    });
+    const { address } = await StellarWalletsKit.authModal();
+    this.currentAddress = address;
+    return { address };
   }
 
   async disconnect(): Promise<void> {
     try {
-      const kitWithDisconnect = this.kit as { disconnect?: () => Promise<void> };
-      if (typeof kitWithDisconnect.disconnect === 'function') {
-        await kitWithDisconnect.disconnect();
-      }
+      await StellarWalletsKit.disconnect();
     } catch (e) {
       console.warn('Failed to disconnect kit natively, falling back to state clearing', e);
     }
-
     this.currentAddress = null;
   }
 
@@ -79,4 +57,3 @@ export class StellarProvider implements ChainProvider {
     return !!this.currentAddress;
   }
 }
-

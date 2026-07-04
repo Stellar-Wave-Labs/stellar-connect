@@ -5,7 +5,8 @@ import { AlertCircle, Power } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
 import { formatAddress } from '../utils/address';
 
-const ActionButton = Button as React.ComponentType<React.ComponentProps<typeof Button>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ActionButton = Button as React.ComponentType<any>;
 
 const Hero: React.FC = () => {
   const { address, isConnected, networkLabel, connect, disconnect, activeChain } = useWallet();
