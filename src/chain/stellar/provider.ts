@@ -1,11 +1,11 @@
-import type { ChainProvider, BalanceInfo } from '../types';
+import type { ChainProvider, BalanceInfo, PaymentRecord } from '../types';
 import { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
 import { Networks } from '@creit.tech/stellar-wallets-kit/types';
 import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
 import { xBullModule } from '@creit.tech/stellar-wallets-kit/modules/xbull';
 import { RabetModule } from '@creit.tech/stellar-wallets-kit/modules/rabet';
 import { ACTIVE_STELLAR_NETWORK, ACTIVE_STELLAR_PASSPHRASE, getNetworkLabel } from './network';
-import { getStellarBalances, server } from './horizon';
+import { getStellarBalances, getRecentPayments, server } from './horizon';
 import * as StellarSdk from '@stellar/stellar-sdk';
 
 export class StellarProvider implements ChainProvider {
@@ -98,5 +98,9 @@ export class StellarProvider implements ChainProvider {
     const response = await server.submitTransaction(txToSubmit);
 
     return { hash: response.hash };
+  }
+
+  async getRecentPayments(address: string): Promise<PaymentRecord[]> {
+    return getRecentPayments(address);
   }
 }
