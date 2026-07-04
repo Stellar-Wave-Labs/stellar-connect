@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
 
-const ActionButton = Button as React.ComponentType<React.ComponentProps<typeof Button>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ActionButton = Button as React.ComponentType<any>;
 
 const WalletInfo: React.FC = () => {
   const { address, balance, networkLabel, isConnected, isFetching, refreshBalance } = useWallet();
