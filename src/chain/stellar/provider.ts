@@ -1,11 +1,11 @@
-import type { ChainProvider } from '../types';
+import type { ChainProvider, BalanceInfo } from '../types';
 import { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
 import { Networks } from '@creit.tech/stellar-wallets-kit/types';
 import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
 import { xBullModule } from '@creit.tech/stellar-wallets-kit/modules/xbull';
 import { RabetModule } from '@creit.tech/stellar-wallets-kit/modules/rabet';
 import { ACTIVE_STELLAR_NETWORK, ACTIVE_STELLAR_PASSPHRASE, getNetworkLabel } from './network';
-import { getXlmBalance, server } from './horizon';
+import { getStellarBalances, server } from './horizon';
 import * as StellarSdk from '@stellar/stellar-sdk';
 
 export class StellarProvider implements ChainProvider {
@@ -42,12 +42,9 @@ export class StellarProvider implements ChainProvider {
     return this.currentAddress;
   }
 
-  async getBalance(address: string): Promise<{ amount: string; symbol: string }> {
-    const result = await getXlmBalance(address);
-    return {
-      amount: result.amount,
-      symbol: result.symbol
-    };
+  async getBalances(address: string): Promise<BalanceInfo[]> {
+    const result = await getStellarBalances(address);
+    return result.balances;
   }
 
   getNetworkLabel(): string {
@@ -58,12 +55,22 @@ export class StellarProvider implements ChainProvider {
     return !!this.currentAddress;
   }
 
-  async sendTransaction(to: string, amount: string): Promise<{ hash: string }> {
+  async sendTransaction(
+    to: string,
+    amount: string,
+    assetCode?: string,
+    assetIssuer?: string
+  ): Promise<{ hash: string }> {
     const sender = this.getAddress();
     if (!sender) throw new Error('Wallet not connected.');
 
     // Load account state from Horizon
     const sourceAccount = await server.loadAccount(sender);
+
+    // Determine target asset type (Native vs Custom Credit)
+    const asset = assetCode && assetIssuer
+      ? new StellarSdk.Asset(assetCode, assetIssuer)
+      : StellarSdk.Asset.native();
 
     // Build the transaction
     const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
@@ -72,7 +79,7 @@ export class StellarProvider implements ChainProvider {
     })
       .addOperation(StellarSdk.Operation.payment({
         destination: to,
-        asset: StellarSdk.Asset.native(),
+        asset: asset,
         amount: amount,
       }))
       .setTimeout(StellarSdk.TimeoutInfinite)
