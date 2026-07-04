@@ -107,5 +107,16 @@ export function useWallet() {
       fetchPayments();
       return result;
     },
+    fundAccount: async () => {
+      const currentAddress = provider.getAddress();
+      if (!currentAddress) throw new Error('Wallet not connected.');
+      const result = await provider.fundAccount(currentAddress);
+
+      // Delay to let Horizon ingest the ledger
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      fetchBalance();
+      fetchPayments();
+      return result;
+    },
   };
 }
