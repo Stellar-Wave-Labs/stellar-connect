@@ -1,4 +1,4 @@
-import type { ChainProvider } from '../types';
+import type { ChainProvider, BalanceInfo } from '../types';
 import { walletConnectService } from '../../services/walletConnectService';
 import { wagmiConfig } from '../../config/wagmiConfig';
 import { getAccount, getBalance, disconnect, getChainId, sendTransaction } from '@wagmi/core';
@@ -39,16 +39,17 @@ export class EvmProvider implements ChainProvider {
     return null;
   }
 
-  async getBalance(address: string): Promise<{ amount: string; symbol: string }> {
+  async getBalances(address: string): Promise<BalanceInfo[]> {
     try {
       const balance = await getBalance(wagmiConfig, { address: address as `0x${string}` });
-      return {
+      return [{
         amount: Number(formatEther(balance.value)).toFixed(4),
         symbol: balance.symbol,
-      };
+        isNative: true,
+      }];
     } catch (error) {
       console.error('Failed to get balance:', error);
-      return { amount: '0', symbol: 'ETH' };
+      return [{ amount: '0', symbol: 'ETH', isNative: true }];
     }
   }
 
@@ -71,7 +72,12 @@ export class EvmProvider implements ChainProvider {
     return account.isConnected || !!this.getAddress();
   }
 
-  async sendTransaction(to: string, amount: string): Promise<{ hash: string }> {
+  async sendTransaction(
+    to: string,
+    amount: string,
+    _assetCode?: string,
+    _assetIssuer?: string
+  ): Promise<{ hash: string }> {
     const result = await sendTransaction(wagmiConfig, {
       to: to as `0x${string}`,
       value: parseEther(amount),
