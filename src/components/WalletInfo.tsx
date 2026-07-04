@@ -22,10 +22,13 @@ const WalletInfo: React.FC = () => {
   const {
     address,
     balances,
+    payments,
     networkLabel,
     isConnected,
     isFetching,
+    fetchingPayments,
     refreshBalance,
+    refreshPayments,
     sendTransaction,
   } = useWallet();
 
@@ -382,6 +385,101 @@ const WalletInfo: React.FC = () => {
           </Grid.Container>
         </Card.Content>
       </Card>
+
+      {/* Recent Payments Section */}
+      <div className="mt-6 text-left">
+        <Card shadow width="100%">
+          <Card.Content>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-base-blue to-base-dark-blue rounded-full flex items-center justify-center shadow-lg">
+                  <Send className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <Text h4 className="mb-0">Recent Payments</Text>
+                  <Text small type="secondary">Your last 10 on-chain operations</Text>
+                </div>
+              </div>
+              <ActionButton
+                auto
+                scale={0.7}
+                icon={<RefreshCw size={12} className={fetchingPayments ? 'animate-spin' : ''} />}
+                loading={fetchingPayments}
+                onClick={refreshPayments}
+                type="secondary"
+              >
+                Refresh
+              </ActionButton>
+            </div>
+
+            {fetchingPayments && payments.length === 0 ? (
+              <div className="py-8 text-center">
+                <Text small type="secondary" className="animate-pulse">Loading transaction history...</Text>
+              </div>
+            ) : payments.length === 0 ? (
+              <div className="py-8 text-center bg-neutral-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
+                <Coins className="w-8 h-8 text-text-secondary mx-auto mb-2 opacity-50" />
+                <Text small type="secondary">No payment history found for this account.</Text>
+              </div>
+            ) : (
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                      <th className="py-3 px-4 font-semibold text-text-secondary text-xs uppercase">Type</th>
+                      <th className="py-3 px-4 font-semibold text-text-secondary text-xs uppercase">From / To</th>
+                      <th className="py-3 px-4 font-semibold text-text-secondary text-xs uppercase">Amount</th>
+                      <th className="py-3 px-4 font-semibold text-text-secondary text-xs uppercase text-right">Links</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((p) => {
+                      const isIncoming = p.to === address;
+                      const displayAddr = isIncoming ? p.from : p.to;
+                      const typeLabel = p.type === 'create_account'
+                        ? 'Create Account'
+                        : isIncoming ? 'Received' : 'Sent';
+
+                      return (
+                        <tr key={p.id} className="border-b border-neutral-100 dark:border-neutral-800/50 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                                p.type === 'create_account' ? 'bg-amber-400' : isIncoming ? 'bg-emerald-400' : 'bg-rose-400'
+                              }`} />
+                              <span className="font-medium text-text-primary text-xs sm:text-sm">{typeLabel}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-xs text-text-secondary">
+                            <span title={displayAddr}>
+                              {displayAddr ? `${displayAddr.slice(0, 6)}...${displayAddr.slice(-6)}` : 'System'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-semibold">
+                            <span className={isIncoming ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}>
+                              {isIncoming ? '+' : '-'}{p.amount} {p.symbol}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <a
+                              href={`https://stellar.expert/explorer/testnet/tx/${p.txHash}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-base-blue hover:underline text-xs"
+                            >
+                              Explorer <ExternalLink size={12} />
+                            </a>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card.Content>
+        </Card>
+      </div>
     </motion.div>
   );
 };
