@@ -1,5 +1,8 @@
 import type { ChainProvider } from '../types';
-import { StellarWalletsKit, WalletNetwork, FreighterModule, xBullModule, AlbedoModule, RabetModule } from '@creit.tech/stellar-wallets-kit';
+import { StellarWalletsKit, WalletNetwork } from '@creit.tech/stellar-wallets-kit';
+import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
+import { xBullModule } from '@creit.tech/stellar-wallets-kit/modules/xbull';
+import { RabetModule } from '@creit.tech/stellar-wallets-kit/modules/rabet';
 import { ACTIVE_STELLAR_NETWORK, ACTIVE_STELLAR_PASSPHRASE, getNetworkLabel } from './network';
 import { getXlmBalance } from './horizon';
 
@@ -8,12 +11,14 @@ export class StellarProvider implements ChainProvider {
   private currentAddress: string | null = null;
 
   constructor() {
+    // v2.x API: no `modules` array in constructor.
+    // Wallets are registered separately via openModal's allowedWallets list.
     this.kit = new StellarWalletsKit({
       network: ACTIVE_STELLAR_NETWORK === 'MAINNET' ? WalletNetwork.PUBLIC : WalletNetwork.TESTNET,
+      selectedWalletId: 'freighter',
       modules: [
         new FreighterModule(),
         new xBullModule(),
-        new AlbedoModule(),
         new RabetModule(),
       ],
     });
@@ -25,7 +30,7 @@ export class StellarProvider implements ChainProvider {
         onWalletSelected: async (option) => {
           try {
             this.kit.setWallet(option.id);
-            const address = await this.kit.getAddress();
+            const { address } = await this.kit.getAddress();
             this.currentAddress = address;
             resolve({ address });
           } catch (e) {
@@ -41,16 +46,14 @@ export class StellarProvider implements ChainProvider {
   }
 
   async disconnect(): Promise<void> {
-    // stellar-wallets-kit manages connection primarily through instance state.
-    // We disconnect by clearing our local address reference and calling kit disconnect if available.
     try {
-      if ('disconnect' in this.kit && typeof this.kit.disconnect === 'function') {
-         await (this.kit as any).disconnect();
+      if ('disconnect' in this.kit && typeof (this.kit as any).disconnect === 'function') {
+        await (this.kit as any).disconnect();
       }
     } catch (e) {
       console.warn('Failed to disconnect kit natively, falling back to state clearing', e);
     }
-    
+
     this.currentAddress = null;
   }
 
@@ -74,3 +77,4 @@ export class StellarProvider implements ChainProvider {
     return !!this.currentAddress;
   }
 }
+
