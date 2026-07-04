@@ -37,12 +37,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setActiveChain(chain);
   };
 
-  // Sync Stellar branding to <html> element via CSS class
+  // Sync branding (CSS classes, browser title, and favicon) to active chain
   useEffect(() => {
+    const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement | null;
     if (activeChain === 'stellar') {
       document.documentElement.classList.add('stellar-theme');
+      document.title = 'StellarConnect';
+      if (favicon) {
+        favicon.href = '/stellar.png';
+        favicon.type = 'image/png';
+      }
     } else {
       document.documentElement.classList.remove('stellar-theme');
+      document.title = 'BaseConnect';
+      if (favicon) {
+        favicon.href = '/base.png';
+        favicon.type = 'image/png';
+      }
     }
   }, [activeChain]);
 
