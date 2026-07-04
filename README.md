@@ -25,10 +25,10 @@ graph TD
     C -->|stellar| D[StellarProvider]
     C -->|evm| E[EvmProvider]
     
-    D --> F[@creit.tech/stellar-wallets-kit]
+    D --> F["@creit.tech/stellar-wallets-kit"]
     D --> G[Stellar Horizon SDK]
     
-    E --> H[@wagmi/core]
+    E --> H["@wagmi/core"]
     E --> I[WalletConnect]
 ```
 
