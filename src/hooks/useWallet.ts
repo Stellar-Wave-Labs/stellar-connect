@@ -83,5 +83,10 @@ export function useWallet() {
       setIsConnected(false);
       setBalance(null);
     },
+    sendTransaction: async (to: string, amount: string) => {
+      const result = await provider.sendTransaction(to, amount);
+      fetchBalance();
+      return result;
+    },
   };
 }

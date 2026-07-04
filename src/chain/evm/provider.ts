@@ -1,8 +1,8 @@
 import type { ChainProvider } from '../types';
 import { walletConnectService } from '../../services/walletConnectService';
 import { wagmiConfig } from '../../config/wagmiConfig';
-import { getAccount, getBalance, disconnect, getChainId } from '@wagmi/core';
-import { formatEther } from 'viem';
+import { getAccount, getBalance, disconnect, getChainId, sendTransaction } from '@wagmi/core';
+import { formatEther, parseEther } from 'viem';
 
 export class EvmProvider implements ChainProvider {
   async connect(): Promise<{ address: string }> {
@@ -69,5 +69,13 @@ export class EvmProvider implements ChainProvider {
   isConnected(): boolean {
     const account = getAccount(wagmiConfig);
     return account.isConnected || !!this.getAddress();
+  }
+
+  async sendTransaction(to: string, amount: string): Promise<{ hash: string }> {
+    const result = await sendTransaction(wagmiConfig, {
+      to: to as `0x${string}`,
+      value: parseEther(amount),
+    });
+    return { hash: result };
   }
 }

@@ -5,4 +5,5 @@ export interface ChainProvider {
   getBalance(address: string): Promise<{ amount: string; symbol: string }>;
   getNetworkLabel(): string;
   isConnected(): boolean;
+  sendTransaction(to: string, amount: string): Promise<{ hash: string }>;
 }
