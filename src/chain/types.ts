@@ -6,6 +6,17 @@ export interface BalanceInfo {
   isNative: boolean;
 }
 
+export interface PaymentRecord {
+  id: string;
+  txHash: string;
+  type: string;
+  createdAt: string;
+  from: string;
+  to: string;
+  amount: string;
+  symbol: string;
+}
+
 export interface ChainProvider {
   connect(): Promise<{ address: string }>;
   disconnect(): Promise<void>;
@@ -14,4 +25,5 @@ export interface ChainProvider {
   getNetworkLabel(): string;
   isConnected(): boolean;
   sendTransaction(to: string, amount: string, assetCode?: string, assetIssuer?: string): Promise<{ hash: string }>;
+  getRecentPayments(address: string): Promise<PaymentRecord[]>;
 }
