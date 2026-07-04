@@ -1,29 +1,50 @@
-# 🧩 StellarConnect
+# 🧩 StellarConnect (Multi-Chain Wallet Integration)
 
-A modern, lightweight dApp that enables seamless wallet connection. Originally built for the Base blockchain, this application is currently undergoing a migration to the Stellar network.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![Stellar](https://img.shields.io/badge/Stellar-000000?style=for-the-badge&logo=stellar&logoColor=white)](https://stellar.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-Built with React, TypeScript, and beautiful animations.
+**StellarConnect** is a modern, lightweight dApp built with React and TypeScript that enables seamless wallet connection across multiple blockchain networks. 
 
-![Stellar](https://img.shields.io/badge/Stellar-000000?style=for-the-badge&logo=stellar&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+Originally built exclusively for the Base (EVM) ecosystem, this project has been fundamentally architected to support **chain-agnostic wallet connections**, currently prioritizing the **Stellar Network** migration.
+
+## 📖 Motivation
+
+Connecting to disparate blockchains (like EVM vs. Stellar) usually requires entirely different frontend logic, polluting React components with chain-specific SDKs (Wagmi for EVM, Stellar Wallets Kit for Stellar). 
+
+**StellarConnect solves this** by introducing a strict `ChainProvider` interface. Our UI components only consume standard wallet state (`address`, `balance`, `networkLabel`), completely abstracted from the underlying blockchain. This makes the frontend clean, testable, and extremely scalable to new chains.
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    A[React UI Components] -->|consumes| B(useWallet Hook)
+    B -->|reads VITE_CHAIN| C{Provider Selection}
+    C -->|stellar| D[StellarProvider]
+    C -->|evm| E[EvmProvider]
+    
+    D --> F[@creit.tech/stellar-wallets-kit]
+    D --> G[Stellar Horizon SDK]
+    
+    E --> H[@wagmi/core]
+    E --> I[WalletConnect]
+```
 
 ## ✨ Features
 
-🔗 **Wallet Connection**: Connect your wallet seamlessly.
-💼 **Address Display**: Show connected wallet address in a clean, shortened format.
-💰 **Balance Display**: Real-time balance updates.
-🌐 **Network Info**: Display current network.
-🔒 **Secure Disconnect**: Safe wallet disconnection.
-🎨 **Smooth Animations**: Beautiful transitions powered by Framer Motion & GSAP.
-📱 **Mobile Optimized**: Perfect for mobile wallet connections.
+- 🔗 **Chain-Agnostic Interface**: Cleanly swaps between EVM and Stellar configurations without modifying React views.
+- 💼 **Smart Address Display**: Automatically detects and formats EVM (`0x...`) and Stellar (`G...`) public keys.
+- 💰 **Real-time Balances**: Fetches native XLM or ETH balances natively.
+- 🎨 **Premium UI**: Fluid animations powered by Framer Motion & GSAP.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 20+
 - npm or yarn
-- A compatible crypto wallet
+- A compatible crypto wallet (e.g., Freighter for Stellar, MetaMask for EVM)
 
 ### Installation
 
@@ -52,43 +73,13 @@ VITE_STELLAR_NETWORK=testnet # or 'mainnet'
 
 # Base Network RPC (if using EVM)
 VITE_BASE_RPC_URL=https://mainnet.base.org
-
-# Optional: Alchemy API Key for enhanced EVM features
-VITE_ALCHEMY_API_KEY=your_alchemy_key_here
 ```
 
-## 🛠️ Architecture (Migration in Progress)
+## 🤝 Contributing
 
-The codebase has been refactored to abstract the underlying blockchain logic behind a generic `ChainProvider` interface. This allows the application to cleanly swap out the current EVM/Base provider with a new Stellar provider in the upcoming migration phases, without affecting the UI components.
+We welcome contributions from the community! Please read our [Contributing Guidelines](CONTRIBUTING.md) to understand our branching strategy, commit standards, and development process.
 
-### Core Framework
-- **React 19** - Latest React with concurrent features
-- **TypeScript** - Type-safe development
-- **Vite** - Lightning-fast build tool
-
-### UI & Animations
-- **Tailwind CSS** - Utility-first styling
-- **Framer Motion** - React animation library
-- **GSAP** - Professional-grade animations
-- **Lottie React** - Complex vector animations
-
-## 🎨 Animation Features
-
-- **Wallet Connection**: Smooth loading states and success animations
-- **Balance Display**: Number counting animations
-- **Network Switching**: Color-coded transitions
-- **Loading States**: Elegant skeleton screens
-- **Micro-interactions**: Hover effects and button animations
-
-## 🚀 Deployment
-
-```bash
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-```
+Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
 
 ## 📄 License
 
