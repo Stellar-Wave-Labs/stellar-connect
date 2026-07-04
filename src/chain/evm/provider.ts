@@ -74,9 +74,7 @@ export class EvmProvider implements ChainProvider {
 
   async sendTransaction(
     to: string,
-    amount: string,
-    _assetCode?: string,
-    _assetIssuer?: string
+    amount: string
   ): Promise<{ hash: string }> {
     const result = await sendTransaction(wagmiConfig, {
       to: to as `0x${string}`,
