@@ -1,7 +1,7 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { ACTIVE_STELLAR_NETWORK } from './network';
 
-import type { BalanceInfo } from '../types';
+import type { BalanceInfo, PaymentRecord } from '../types';
 
 // Get the appropriate Horizon URL based on the active network
 const HORIZON_URL =
@@ -53,5 +53,47 @@ export async function getStellarBalances(address: string): Promise<{ balances: B
     // For other errors (e.g. network issues), rethrow or handle accordingly
     console.error('Failed to load Stellar account:', error);
     throw error;
+  }
+}
+
+/**
+ * Fetches recent payments and account creations for an account from Horizon.
+ */
+export async function getRecentPayments(address: string): Promise<PaymentRecord[]> {
+  try {
+    const response = await server
+      .payments()
+      .forAccount(address)
+      .limit(10)
+      .order('desc')
+      .call();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response.records.map((r: any) => {
+      let amount = '0';
+      let symbol = 'XLM';
+
+      if (r.type === 'payment') {
+        amount = r.amount;
+        symbol = r.asset_type === 'native' ? 'XLM' : r.asset_code || 'UNKNOWN';
+      } else if (r.type === 'create_account') {
+        amount = r.starting_balance;
+        symbol = 'XLM';
+      }
+
+      return {
+        id: r.id,
+        txHash: r.transaction_hash,
+        type: r.type,
+        createdAt: r.created_at,
+        from: r.from || '',
+        to: r.to || r.account || '',
+        amount,
+        symbol,
+      };
+    });
+  } catch (error) {
+    console.error('Failed to fetch payments:', error);
+    return [];
   }
 }
