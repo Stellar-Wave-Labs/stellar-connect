@@ -30,18 +30,26 @@ const WalletInfo: React.FC = () => {
     refreshBalance,
     refreshPayments,
     sendTransaction,
+    addTrustline,
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Form State
+  // Form State - Send Transaction
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedAssetIndex, setSelectedAssetIndex] = useState(0);
   const [sending, setSending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
+
+  // Form State - Trustline
+  const [trustAssetCode, setTrustAssetCode] = useState('');
+  const [trustIssuer, setTrustIssuer] = useState('');
+  const [trustLoading, setTrustLoading] = useState(false);
+  const [trustSuccessHash, setTrustSuccessHash] = useState<string | null>(null);
+  const [trustError, setTrustError] = useState<string | null>(null);
 
   const activeBalance = balances[selectedAssetIndex] || null;
 
@@ -62,6 +70,10 @@ const WalletInfo: React.FC = () => {
     setTxHash(null);
     setTxError(null);
     setSelectedAssetIndex(0);
+    setTrustAssetCode('');
+    setTrustIssuer('');
+    setTrustSuccessHash(null);
+    setTrustError(null);
   }, [address]);
 
   const copyAddress = async () => {
@@ -109,6 +121,32 @@ const WalletInfo: React.FC = () => {
       setTxError(e instanceof Error ? e.message : 'Transaction failed.');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleEstablishTrust = async () => {
+    if (!trustAssetCode || !trustIssuer) return;
+
+    const { isValidAddress } = await import('../utils/address');
+    if (!isValidAddress(trustIssuer)) {
+      setTrustError('Invalid issuer address.');
+      return;
+    }
+
+    setTrustLoading(true);
+    setTrustError(null);
+    setTrustSuccessHash(null);
+
+    try {
+      const result = await addTrustline(trustAssetCode, trustIssuer);
+      setTrustSuccessHash(result.hash);
+      setTrustAssetCode('');
+      setTrustIssuer('');
+    } catch (e) {
+      console.error(e);
+      setTrustError(e instanceof Error ? e.message : 'Failed to establish trustline.');
+    } finally {
+      setTrustLoading(false);
     }
   };
 
@@ -378,6 +416,104 @@ const WalletInfo: React.FC = () => {
                     onClick={handleSend}
                   >
                     Send Transaction
+                  </ActionButton>
+                </div>
+              </div>
+            </Grid>
+
+            {/* Add Trustline Form Card */}
+            <Grid xs={24} md={12}>
+              <div className="w-full bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 h-full flex flex-col justify-between">
+                <div>
+                  <Text small type="secondary" className="flex items-center gap-2 mb-3">
+                    <Coins className="w-4 h-4" />
+                    Add Custom Token (Trustline)
+                  </Text>
+
+                  {/* Preset Quick Select Buttons */}
+                  <div className="flex gap-2 mb-4 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTrustAssetCode('USDC');
+                        setTrustIssuer('GBBD47IF6LWK7P7TCIHO2XHG75NZ54O4QA6P7CA45543FA57VTSZNDGS');
+                        setTrustError(null);
+                        setTrustSuccessHash(null);
+                      }}
+                      className="px-2.5 py-1 bg-base-blue/10 hover:bg-base-blue/20 text-base-blue text-xs font-semibold rounded-lg transition-colors border-0 cursor-pointer"
+                    >
+                      + USDC (Testnet)
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs text-text-secondary mb-1">Asset Code</label>
+                      <input
+                        type="text"
+                        value={trustAssetCode}
+                        onChange={(e) => {
+                          setTrustAssetCode(e.target.value.toUpperCase());
+                          setTrustError(null);
+                          setTrustSuccessHash(null);
+                        }}
+                        placeholder="USDC"
+                        maxLength={12}
+                        className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-base-blue text-sm font-semibold text-text-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-text-secondary mb-1">Issuer Address</label>
+                      <input
+                        type="text"
+                        value={trustIssuer}
+                        onChange={(e) => {
+                          setTrustIssuer(e.target.value);
+                          setTrustError(null);
+                          setTrustSuccessHash(null);
+                        }}
+                        placeholder="G..."
+                        className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-base-blue text-sm font-mono text-text-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-4">
+                  {trustError && (
+                    <div className="text-xs text-error font-medium bg-error/10 border border-error/20 p-3 rounded-xl flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{trustError}</span>
+                    </div>
+                  )}
+
+                  {trustSuccessHash && (
+                    <div className="text-xs text-success font-medium bg-success/10 border border-success/20 p-3 rounded-xl flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 shrink-0" />
+                        <span>Trustline established!</span>
+                      </div>
+                      <a
+                        href={`https://stellar.expert/explorer/testnet/tx/${trustSuccessHash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-base-blue underline font-mono break-all mt-1 inline-flex items-center gap-1"
+                      >
+                        View on Explorer <ExternalLink size={12} />
+                      </a>
+                    </div>
+                  )}
+
+                  <ActionButton
+                    auto
+                    className="w-full"
+                    type="secondary"
+                    loading={trustLoading}
+                    disabled={!trustAssetCode || !trustIssuer || trustLoading}
+                    onClick={handleEstablishTrust}
+                  >
+                    Establish Trustline
                   </ActionButton>
                 </div>
               </div>

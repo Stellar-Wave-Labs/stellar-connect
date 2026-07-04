@@ -101,5 +101,11 @@ export function useWallet() {
       fetchPayments();
       return result;
     },
+    addTrustline: async (assetCode: string, assetIssuer: string) => {
+      const result = await provider.addTrustline(assetCode, assetIssuer);
+      fetchBalance();
+      fetchPayments();
+      return result;
+    },
   };
 }
