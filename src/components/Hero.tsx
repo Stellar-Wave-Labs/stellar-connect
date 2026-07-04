@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Card, Text } from '@geist-ui/core';
-import { Wallet, AlertCircle, Power } from 'lucide-react';
+import { AlertCircle, Power } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
 import { formatAddress } from '../utils/address';
-import xlmLogo from '../assets/xlm.svg';
-import xlmWhiteLogo from '../assets/xlm-white.svg';
 
 const ActionButton = Button as React.ComponentType<any>;
 
@@ -42,35 +40,31 @@ const Hero: React.FC = () => {
       transition={{ duration: 0.6 }}
     >
       <div className="mb-8 max-w-2xl mx-auto px-4">
-        {/* Hero Icon — XLM logo on Stellar, animated gradient on Base */}
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-base-blue rounded-2xl mb-6 mx-auto overflow-hidden">
+        {/* Hero Icon — Stellar logo on Stellar, Base logo on Base */}
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-white dark:bg-neutral-800 rounded-2xl mb-6 mx-auto overflow-hidden p-3 shadow-lg border border-neutral-200 dark:border-neutral-700">
           <AnimatePresence mode="wait">
             {isStellar ? (
               <motion.img
-                key="xlm"
-                src={xlmWhiteLogo}
-                alt="XLM"
-                className="w-14 h-14"
+                key="stellar"
+                src="/stellar.png"
+                alt="Stellar"
+                className="w-14 h-14 object-contain"
                 initial={{ opacity: 0, scale: 0.7, rotate: -20 }}
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
                 exit={{ opacity: 0, scale: 0.7, rotate: 20 }}
                 transition={{ duration: 0.4, type: 'spring', stiffness: 280 }}
               />
             ) : (
-              <motion.div
+              <motion.img
                 key="base"
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(45deg, #ffffff, #f0f8ff, #e6f3ff, #ffffff)',
-                  backgroundSize: '200% 200%',
-                }}
-                animate={{ backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                initial={{ opacity: 0 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className="w-8 h-1 bg-base-blue rounded-full" />
-              </motion.div>
+                src="/base.png"
+                alt="Base"
+                className="w-12 h-12 object-contain"
+                initial={{ opacity: 0, scale: 0.7, rotate: -20 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.7, rotate: 20 }}
+                transition={{ duration: 0.4, type: 'spring', stiffness: 280 }}
+              />
             )}
           </AnimatePresence>
         </div>
@@ -109,10 +103,10 @@ const Hero: React.FC = () => {
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
                     >
-                      <div className="w-16 h-16 bg-gradient-to-br from-success to-success/80 rounded-full flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center shadow-lg p-3">
                         {isStellar
-                          ? <img src={xlmLogo} alt="XLM" className="w-10 h-10" />
-                          : <Wallet className="w-8 h-8 text-white" />}
+                          ? <img src="/stellar.png" alt="Stellar" className="w-10 h-10 object-contain" />
+                          : <img src="/base.png" alt="Base" className="w-10 h-10 object-contain" />}
                       </div>
                     </motion.div>
                     <div>
@@ -151,9 +145,11 @@ const Hero: React.FC = () => {
                 <Card.Content className="px-4 sm:px-6">
                   <div className="flex flex-col gap-6 max-w-xl mx-auto">
                     <div className="flex items-center gap-4 justify-center">
-                      {isStellar
-                        ? <img src={xlmLogo} alt="XLM" className="w-10 h-10" />
-                        : <Wallet className="w-10 h-10 text-base-blue" />}
+                      <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center p-3">
+                        {isStellar
+                          ? <img src="/stellar.png" alt="Stellar" className="w-10 h-10 object-contain" />
+                          : <img src="/base.png" alt="Base" className="w-10 h-10 object-contain" />}
+                      </div>
                       <div className="text-left">
                         <Text h3 className="mb-0">Connect your wallet</Text>
                         <Text small type="secondary">
