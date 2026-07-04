@@ -26,7 +26,6 @@ const WalletInfo: React.FC = () => {
     isConnected,
     isFetching,
     refreshBalance,
-    activeChain,
     sendTransaction,
   } = useWallet();
 
@@ -53,14 +52,14 @@ const WalletInfo: React.FC = () => {
     );
   }, []);
 
-  // Reset form status when chain changes
+  // Reset form status when address or network changes
   useEffect(() => {
     setRecipient('');
     setAmount('');
     setTxHash(null);
     setTxError(null);
     setSelectedAssetIndex(0);
-  }, [activeChain]);
+  }, [address]);
 
   const copyAddress = async () => {
     if (!address) return;
@@ -75,10 +74,7 @@ const WalletInfo: React.FC = () => {
 
   const openExplorer = () => {
     if (!address) return;
-    const explorerUrl =
-      activeChain === 'stellar'
-        ? `https://stellar.expert/explorer/testnet/account/${address}`
-        : `https://sepolia.basescan.org/address/${address}`;
+    const explorerUrl = `https://stellar.expert/explorer/testnet/account/${address}`;
     window.open(explorerUrl, '_blank');
   };
 
@@ -87,7 +83,7 @@ const WalletInfo: React.FC = () => {
 
     const { isValidAddress } = await import('../utils/address');
     if (!isValidAddress(recipient)) {
-      setTxError(`Invalid destination address for the ${activeChain === 'stellar' ? 'Stellar' : 'Base (EVM)'} network.`);
+      setTxError('Invalid destination address for the Stellar network.');
       return;
     }
 
@@ -314,7 +310,7 @@ const WalletInfo: React.FC = () => {
                         setTxError(null);
                         setTxHash(null);
                       }}
-                      placeholder={activeChain === 'stellar' ? 'G...' : '0x...'}
+                      placeholder="G..."
                       className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-base-blue text-sm font-mono text-text-primary"
                     />
                   </div>
@@ -360,11 +356,7 @@ const WalletInfo: React.FC = () => {
                         <span>Transaction successful!</span>
                       </div>
                       <a
-                        href={
-                          activeChain === 'stellar'
-                            ? `https://stellar.expert/explorer/testnet/tx/${txHash}`
-                            : `https://sepolia.basescan.org/tx/${txHash}`
-                        }
+                        href={`https://stellar.expert/explorer/testnet/tx/${txHash}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-base-blue underline font-mono break-all mt-1 inline-flex items-center gap-1"
