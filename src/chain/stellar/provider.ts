@@ -1,4 +1,4 @@
-import { ChainProvider } from '../types';
+import type { ChainProvider } from '../types';
 import { StellarWalletsKit, WalletNetwork, FreighterModule, xBullModule, AlbedoModule, RabetModule } from '@creit.tech/stellar-wallets-kit';
 import { ACTIVE_STELLAR_NETWORK, ACTIVE_STELLAR_PASSPHRASE, getNetworkLabel } from './network';
 import { getXlmBalance } from './horizon';

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
-import { ChainProvider } from '../chain/types';
+import type { ChainProvider } from '../chain/types';
 import { EvmProvider } from '../chain/evm/provider';
 import { StellarProvider } from '../chain/stellar/provider';
 

@@ -1,4 +1,4 @@
-import { ChainProvider } from '../types';
+import type { ChainProvider } from '../types';
 import { walletConnectService } from '../../services/walletConnectService';
 import { wagmiConfig } from '../../config/wagmiConfig';
 import { getAccount, getBalance, disconnect, getChainId } from '@wagmi/core';
