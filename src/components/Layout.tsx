@@ -8,6 +8,7 @@ import InteractiveBubbles from './InteractiveBubbles';
 import BubbleTrail from './BubbleTrail';
 import NetworkSwitcher from './NetworkSwitcher';
 import { useTheme } from '../contexts/ThemeContext';
+import { useWallet } from '../hooks/useWallet';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,11 +16,25 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isDarkMode } = useTheme();
+  const { activeChain } = useWallet();
+
+  const isStellar = activeChain === 'stellar';
 
   return (
     <GeistProvider themeType={isDarkMode ? 'dark' : 'light'}>
       <CssBaseline />
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-800 dark:to-neutral-900 transition-all duration-300 relative overflow-hidden">
+      <div
+        className="min-h-screen transition-all duration-700 relative overflow-hidden"
+        style={{
+          background: isStellar
+            ? isDarkMode
+              ? 'linear-gradient(135deg, #000005 0%, #080B1A 50%, #0D0F2B 100%)'
+              : 'linear-gradient(135deg, #000000 0%, #0A0F2E 40%, #0D1B4B 100%)'
+            : isDarkMode
+            ? 'linear-gradient(135deg, #111827 0%, #1f2937 100%)'
+            : 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
+        }}
+      >
         <AnimatedBackground />
         <FloatingParticles />
         <AnimatedBubbles />
@@ -38,3 +53,4 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 };
 
 export default Layout;
+
