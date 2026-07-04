@@ -15,7 +15,7 @@ const WalletContext = createContext<WalletContextValue | null>(null);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeChain, setActiveChain] = useState<ChainType>(
-    (import.meta.env.VITE_CHAIN as ChainType) === 'stellar' ? 'stellar' : 'evm'
+    (import.meta.env.VITE_CHAIN as ChainType) === 'evm' ? 'evm' : 'stellar'
   );
   
   // Keep instances alive so we don't re-initialize SDKs constantly
