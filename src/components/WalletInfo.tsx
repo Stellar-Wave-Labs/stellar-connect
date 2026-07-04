@@ -10,6 +10,8 @@ import {
   CheckCircle,
   Network,
   Coins,
+  Send,
+  AlertCircle,
 } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
 
@@ -17,9 +19,26 @@ import { useWallet } from '../hooks/useWallet';
 const ActionButton = Button as React.ComponentType<any>;
 
 const WalletInfo: React.FC = () => {
-  const { address, balance, networkLabel, isConnected, isFetching, refreshBalance } = useWallet();
+  const {
+    address,
+    balance,
+    networkLabel,
+    isConnected,
+    isFetching,
+    refreshBalance,
+    activeChain,
+    sendTransaction,
+  } = useWallet();
+
   const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Form State
+  const [recipient, setRecipient] = useState('');
+  const [amount, setAmount] = useState('');
+  const [sending, setSending] = useState(false);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [txError, setTxError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!cardRef.current) return;
@@ -30,6 +49,14 @@ const WalletInfo: React.FC = () => {
       { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', delay: 0.3 }
     );
   }, []);
+
+  // Reset form status when chain changes
+  useEffect(() => {
+    setRecipient('');
+    setAmount('');
+    setTxHash(null);
+    setTxError(null);
+  }, [activeChain]);
 
   const copyAddress = async () => {
     if (!address) return;
@@ -44,11 +71,37 @@ const WalletInfo: React.FC = () => {
 
   const openExplorer = () => {
     if (!address) return;
-    // Explorer URL could be abstracted by the provider in the future,
-    // for now we just link to a generic explorer or the address directly if we know it.
-    // Defaulting to Base mainnet basescan for the demo
-    const explorerUrl = `https://basescan.org/address/${address}`;
+    const explorerUrl =
+      activeChain === 'stellar'
+        ? `https://stellar.expert/explorer/testnet/account/${address}`
+        : `https://sepolia.basescan.org/address/${address}`;
     window.open(explorerUrl, '_blank');
+  };
+
+  const handleSend = async () => {
+    if (!recipient || !amount) return;
+
+    const { isValidAddress } = await import('../utils/address');
+    if (!isValidAddress(recipient)) {
+      setTxError(`Invalid destination address for the ${activeChain === 'stellar' ? 'Stellar' : 'Base (EVM)'} network.`);
+      return;
+    }
+
+    setSending(true);
+    setTxError(null);
+    setTxHash(null);
+
+    try {
+      const result = await sendTransaction(recipient, amount);
+      setTxHash(result.hash);
+      setRecipient('');
+      setAmount('');
+    } catch (e) {
+      console.error(e);
+      setTxError(e instanceof Error ? e.message : 'Transaction failed.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const balanceDisplay = balance ? `${balance.amount} ${balance.symbol}` : '--';
@@ -126,7 +179,7 @@ const WalletInfo: React.FC = () => {
                   <Wallet className="w-4 h-4" />
                   Wallet Address
                 </Text>
-            <Snippet symbol="" width="100%" className="mb-3" text={address ?? ''}>
+                <Snippet symbol="" width="100%" className="mb-3" text={address ?? ''}>
                   {address}
                 </Snippet>
                 <div className="flex gap-2">
@@ -151,7 +204,7 @@ const WalletInfo: React.FC = () => {
             </Grid>
 
             <Grid xs={24} md={12}>
-              <div className="w-full bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-700">
+              <div className="w-full bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-700 h-full">
                 <Text small type="secondary" className="flex items-center gap-2 mb-1">
                   <Network className="w-4 h-4" />
                   Network
@@ -167,8 +220,8 @@ const WalletInfo: React.FC = () => {
               </div>
             </Grid>
 
-            <Grid xs={24}>
-              <div className="w-full bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-700">
+            <Grid xs={24} md={12}>
+              <div className="w-full bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-700 h-full">
                 <Text small type="secondary" className="flex items-center gap-2 mb-1">
                   <Coins className="w-4 h-4" />
                   Balance
@@ -191,6 +244,99 @@ const WalletInfo: React.FC = () => {
                     type="secondary"
                   >
                     Refresh
+                  </ActionButton>
+                </div>
+              </div>
+            </Grid>
+
+            {/* Send Assets Form Card */}
+            <Grid xs={24} md={12}>
+              <div className="w-full bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
+                <Text small type="secondary" className="flex items-center gap-2 mb-3">
+                  <Send className="w-4 h-4" />
+                  Send Assets
+                </Text>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-text-secondary mb-1">Recipient Address</label>
+                    <input
+                      type="text"
+                      value={recipient}
+                      onChange={(e) => {
+                        setRecipient(e.target.value);
+                        setTxError(null);
+                        setTxHash(null);
+                      }}
+                      placeholder={activeChain === 'stellar' ? 'G...' : '0x...'}
+                      className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-base-blue text-sm font-mono text-text-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-text-secondary mb-1">Amount</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        step="any"
+                        value={amount}
+                        onChange={(e) => {
+                          setAmount(e.target.value);
+                          setTxError(null);
+                          setTxHash(null);
+                        }}
+                        placeholder="0.0"
+                        className="flex-1 px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-base-blue text-sm text-text-primary"
+                      />
+                      {balance && (
+                        <button
+                          type="button"
+                          onClick={() => setAmount(balance.amount)}
+                          className="px-3 py-2 bg-neutral-200 dark:bg-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-500 rounded-xl text-xs font-semibold transition-colors text-text-primary"
+                        >
+                          Max
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {txError && (
+                    <div className="text-xs text-error font-medium bg-error/10 border border-error/20 p-3 rounded-xl flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{txError}</span>
+                    </div>
+                  )}
+
+                  {txHash && (
+                    <div className="text-xs text-success font-medium bg-success/10 border border-success/20 p-3 rounded-xl flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 shrink-0" />
+                        <span>Transaction successful!</span>
+                      </div>
+                      <a
+                        href={
+                          activeChain === 'stellar'
+                            ? `https://stellar.expert/explorer/testnet/tx/${txHash}`
+                            : `https://sepolia.basescan.org/tx/${txHash}`
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-base-blue underline font-mono break-all mt-1 inline-flex items-center gap-1"
+                      >
+                        View on Explorer <ExternalLink size={12} />
+                      </a>
+                    </div>
+                  )}
+
+                  <ActionButton
+                    auto
+                    className="w-full"
+                    type="secondary"
+                    loading={sending}
+                    disabled={!recipient || !amount || sending}
+                    onClick={handleSend}
+                  >
+                    Send Transaction
                   </ActionButton>
                 </div>
               </div>
