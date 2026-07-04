@@ -6,6 +6,7 @@ import FloatingParticles from './FloatingParticles';
 import AnimatedBubbles from './AnimatedBubbles';
 import InteractiveBubbles from './InteractiveBubbles';
 import BubbleTrail from './BubbleTrail';
+import NetworkSwitcher from './NetworkSwitcher';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface LayoutProps {
@@ -24,6 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <AnimatedBubbles />
         <InteractiveBubbles />
         <BubbleTrail />
+        <NetworkSwitcher />
         <ThemeToggle />
         <div className="container mx-auto px-4 py-4 sm:py-8 max-w-6xl relative z-10">
           <div className="space-y-6 sm:space-y-8">

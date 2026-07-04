@@ -1,16 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { EvmProvider } from '../chain/evm/provider';
-import { StellarProvider } from '../chain/stellar/provider';
+import { useWalletContext } from '../providers/WalletProvider';
 import { watchAccount } from '@wagmi/core';
 import { wagmiConfig } from '../config/wagmiConfig';
-import { ChainProvider } from '../chain/types';
-
-const IS_STELLAR = import.meta.env.VITE_CHAIN === 'stellar';
-
-// Singleton instance dynamically selected
-const provider: ChainProvider = IS_STELLAR ? new StellarProvider() : new EvmProvider();
 
 export function useWallet() {
+  const { provider, activeChain, switchChain } = useWalletContext();
+  
   const [address, setAddress] = useState<string | null>(provider.getAddress());
   const [isConnected, setIsConnected] = useState<boolean>(provider.isConnected());
   const [networkLabel, setNetworkLabel] = useState<string>(provider.getNetworkLabel());
@@ -32,16 +27,21 @@ export function useWallet() {
     } else {
       setBalance(null);
     }
-  }, []);
+  }, [provider]);
+
+  // Update local state when provider instance changes
+  useEffect(() => {
+    setAddress(provider.getAddress());
+    setIsConnected(provider.isConnected());
+    setNetworkLabel(provider.getNetworkLabel());
+    fetchBalance();
+  }, [provider, fetchBalance]);
 
   useEffect(() => {
-    // Initial fetch
-    fetchBalance();
-
     let unwatchAccount: (() => void) | undefined;
     
     // Wagmi's watchAccount is only relevant for the EvmProvider
-    if (!IS_STELLAR) {
+    if (activeChain === 'evm') {
       unwatchAccount = watchAccount(wagmiConfig, {
         onChange() {
           setAddress(provider.getAddress());
@@ -59,7 +59,7 @@ export function useWallet() {
       if (unwatchAccount) unwatchAccount();
       clearInterval(interval);
     };
-  }, [fetchBalance]);
+  }, [provider, activeChain, fetchBalance]);
 
   return {
     address,
@@ -67,6 +67,8 @@ export function useWallet() {
     networkLabel,
     isConnected,
     isFetching,
+    activeChain,
+    switchChain,
     refreshBalance: fetchBalance,
     connect: async () => {
       await provider.connect();
