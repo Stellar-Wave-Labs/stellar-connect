@@ -37,6 +37,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setActiveChain(chain);
   };
 
+  // Sync Stellar branding to <html> element via CSS class
+  useEffect(() => {
+    if (activeChain === 'stellar') {
+      document.documentElement.classList.add('stellar-theme');
+    } else {
+      document.documentElement.classList.remove('stellar-theme');
+    }
+  }, [activeChain]);
+
   return (
     <WalletContext.Provider value={{ provider, activeChain, switchChain }}>
       {children}
