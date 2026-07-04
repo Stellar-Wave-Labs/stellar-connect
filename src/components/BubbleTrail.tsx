@@ -97,11 +97,13 @@ const BubbleTrail: React.FC = () => {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseleave', handleMouseLeave);
 
+    const currentBubbles = trailBubbles.current;
+
     // Cleanup
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
-      trailBubbles.current.forEach(bubble => bubble.remove());
+      currentBubbles.forEach(bubble => bubble.remove());
     };
   }, [isDarkMode]);
 

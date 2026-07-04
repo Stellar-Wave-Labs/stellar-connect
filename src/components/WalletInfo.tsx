@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
-import { Button, Card, Grid, Spacer, Text, Snippet, Tag } from '@geist-ui/core';
+import { Button, Card, Grid, Text, Snippet, Tag } from '@geist-ui/core';
 import {
   Wallet,
   Copy,
   ExternalLink,
   RefreshCw,
   CheckCircle,
-  AlertCircle,
   Network,
   Coins,
 } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
 
-const ActionButton = Button as React.ComponentType<any>;
+const ActionButton = Button as React.ComponentType<React.ComponentProps<typeof Button>>;
 
 const WalletInfo: React.FC = () => {
   const { address, balance, networkLabel, isConnected, isFetching, refreshBalance } = useWallet();

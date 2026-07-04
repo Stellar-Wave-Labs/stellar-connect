@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Modal, Text } from '@geist-ui/core';
+import { Button, Modal } from '@geist-ui/core';
 import { Network, ChevronDown } from 'lucide-react';
 import { useWallet } from '../hooks/useWallet';
 
