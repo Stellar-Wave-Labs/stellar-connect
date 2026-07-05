@@ -194,7 +194,7 @@ export class StellarProvider implements ChainProvider {
     const contract = new StellarSdk.Contract(contractId);
 
     // 1. Build initial call transaction
-    let tx = new StellarSdk.TransactionBuilder(sourceAccount, {
+    const tx = new StellarSdk.TransactionBuilder(sourceAccount, {
       fee: '100',
       networkPassphrase: ACTIVE_STELLAR_PASSPHRASE,
     })
@@ -203,9 +203,9 @@ export class StellarProvider implements ChainProvider {
       .build();
 
     // 2. Prepare transaction (simulates and assembles automatically)
-    tx = await rpcServer.prepareTransaction(tx);
+    const preparedTx = await rpcServer.prepareTransaction(tx);
 
-    const xdr = tx.toXDR();
+    const xdr = preparedTx.toXDR();
 
     // 3. Request wallet to sign the transaction
     const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
@@ -215,7 +215,7 @@ export class StellarProvider implements ChainProvider {
 
     // 4. Submit signed transaction to RPC server
     const txToSubmit = StellarSdk.TransactionBuilder.fromXDR(signedTxXdr, ACTIVE_STELLAR_PASSPHRASE);
-    const sendResponse = await rpcServer.sendTransaction(txToSubmit) as any;
+    const sendResponse = await rpcServer.sendTransaction(txToSubmit);
     
     if (sendResponse.status === 'ERROR') {
       throw new Error(`RPC submission error: ${JSON.stringify(sendResponse.errorResult)}`);
@@ -224,12 +224,12 @@ export class StellarProvider implements ChainProvider {
     const txHash = sendResponse.hash;
 
     // 5. Poll transaction status until complete
-    let status = sendResponse.status;
+    let status: string = sendResponse.status;
     let attempts = 0;
     while (status === 'PENDING' && attempts < 10) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      const getTxResponse = await rpcServer.getTransaction(txHash) as any;
-      status = getTxResponse.status;
+      const getTxResponse = await rpcServer.getTransaction(txHash);
+      status = getTxResponse.status as string;
       if (status === 'SUCCESS') {
         return { hash: txHash };
       }
