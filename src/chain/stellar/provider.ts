@@ -202,24 +202,18 @@ export class StellarProvider implements ChainProvider {
       .setTimeout(StellarSdk.TimeoutInfinite)
       .build();
 
-    // 2. Simulate transaction to calculate fees and footprints
-    const simulation = await rpcServer.simulateTransaction(tx);
-    if (!StellarSdk.rpc.Api.isSimulationSuccess(simulation)) {
-      throw new Error(`Simulation failed: ${simulation.error}`);
-    }
-
-    // 3. Assemble final transaction with simulation results
-    tx = rpcServer.assembleTransaction(tx, simulation) as any;
+    // 2. Prepare transaction (simulates and assembles automatically)
+    tx = await rpcServer.prepareTransaction(tx);
 
     const xdr = tx.toXDR();
 
-    // 4. Request wallet to sign the transaction
+    // 3. Request wallet to sign the transaction
     const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
       networkPassphrase: ACTIVE_STELLAR_PASSPHRASE,
       address: sender,
     });
 
-    // 5. Submit signed transaction to RPC server
+    // 4. Submit signed transaction to RPC server
     const txToSubmit = StellarSdk.TransactionBuilder.fromXDR(signedTxXdr, ACTIVE_STELLAR_PASSPHRASE);
     const sendResponse = await rpcServer.sendTransaction(txToSubmit) as any;
     
@@ -229,7 +223,7 @@ export class StellarProvider implements ChainProvider {
 
     const txHash = sendResponse.hash;
 
-    // 6. Poll transaction status until complete
+    // 5. Poll transaction status until complete
     let status = sendResponse.status;
     let attempts = 0;
     while (status === 'PENDING' && attempts < 10) {
