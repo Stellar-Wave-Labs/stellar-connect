@@ -114,3 +114,5 @@ export async function fundWithFriendbot(address: string): Promise<boolean> {
     throw error;
   }
 }
+
+export const rpcServer = new StellarSdk.rpc.Server('https://soroban-testnet.stellar.org');
