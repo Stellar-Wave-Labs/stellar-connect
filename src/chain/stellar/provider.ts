@@ -209,7 +209,7 @@ export class StellarProvider implements ChainProvider {
     }
 
     // 3. Assemble final transaction with simulation results
-    tx = StellarSdk.assembleTransaction(tx, simulation).build();
+    tx = rpcServer.assembleTransaction(tx, simulation) as any;
 
     const xdr = tx.toXDR();
 
@@ -221,10 +221,10 @@ export class StellarProvider implements ChainProvider {
 
     // 5. Submit signed transaction to RPC server
     const txToSubmit = StellarSdk.TransactionBuilder.fromXDR(signedTxXdr, ACTIVE_STELLAR_PASSPHRASE);
-    const sendResponse = await rpcServer.sendTransaction(txToSubmit);
+    const sendResponse = await rpcServer.sendTransaction(txToSubmit) as any;
     
     if (sendResponse.status === 'ERROR') {
-      throw new Error(`RPC submission error: ${JSON.stringify(sendResponse.errorResultXdr)}`);
+      throw new Error(`RPC submission error: ${JSON.stringify(sendResponse.errorResult)}`);
     }
 
     const txHash = sendResponse.hash;
@@ -234,13 +234,13 @@ export class StellarProvider implements ChainProvider {
     let attempts = 0;
     while (status === 'PENDING' && attempts < 10) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      const getTxResponse = await rpcServer.getTransaction(txHash);
+      const getTxResponse = await rpcServer.getTransaction(txHash) as any;
       status = getTxResponse.status;
       if (status === 'SUCCESS') {
         return { hash: txHash };
       }
       if (status === 'FAILED') {
-        throw new Error(`Transaction execution failed: ${JSON.stringify(getTxResponse.resultXdr)}`);
+        throw new Error('Transaction execution failed.');
       }
       attempts++;
     }
