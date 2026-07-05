@@ -118,5 +118,14 @@ export function useWallet() {
       fetchPayments();
       return result;
     },
+    getContractValue: async (contractId: string) => {
+      return provider.getContractValue(contractId);
+    },
+    incrementContractValue: async (contractId: string) => {
+      const result = await provider.incrementContractValue(contractId);
+      fetchBalance();
+      fetchPayments();
+      return result;
+    },
   };
 }
