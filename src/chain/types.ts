@@ -28,4 +28,6 @@ export interface ChainProvider {
   getRecentPayments(address: string): Promise<PaymentRecord[]>;
   addTrustline(assetCode: string, assetIssuer: string): Promise<{ hash: string }>;
   fundAccount(address: string): Promise<boolean>;
+  getContractValue(contractId: string): Promise<number>;
+  incrementContractValue(contractId: string): Promise<{ hash: string }>;
 }

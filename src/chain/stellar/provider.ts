@@ -5,7 +5,7 @@ import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freight
 import { xBullModule } from '@creit.tech/stellar-wallets-kit/modules/xbull';
 import { RabetModule } from '@creit.tech/stellar-wallets-kit/modules/rabet';
 import { ACTIVE_STELLAR_NETWORK, ACTIVE_STELLAR_PASSPHRASE, getNetworkLabel } from './network';
-import { getStellarBalances, getRecentPayments, fundWithFriendbot, server } from './horizon';
+import { getStellarBalances, getRecentPayments, fundWithFriendbot, rpcServer, server } from './horizon';
 import * as StellarSdk from '@stellar/stellar-sdk';
 
 export class StellarProvider implements ChainProvider {
@@ -140,5 +140,115 @@ export class StellarProvider implements ChainProvider {
 
   async fundAccount(address: string): Promise<boolean> {
     return fundWithFriendbot(address);
+  }
+
+  async getContractValue(contractId: string): Promise<number> {
+    const contract = new StellarSdk.Contract(contractId);
+    
+    // Temporary keypair for simulated call authentication (doesn't hit ledger)
+    const tempSource = StellarSdk.Keypair.random();
+    const sourceAccount = new StellarSdk.Account(tempSource.publicKey(), '0');
+
+    // Attempt 'get_value'
+    const tx = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: '100',
+      networkPassphrase: ACTIVE_STELLAR_PASSPHRASE,
+    })
+      .addOperation(contract.call('get_value'))
+      .setTimeout(StellarSdk.TimeoutInfinite)
+      .build();
+
+    const simulation = await rpcServer.simulateTransaction(tx);
+    if (StellarSdk.rpc.Api.isSimulationSuccess(simulation)) {
+      const resultVal = simulation.result?.retval;
+      if (resultVal) {
+        return StellarSdk.scValToNative(resultVal);
+      }
+    }
+    
+    // Attempt fallback 'get'
+    const fallbackTx = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: '100',
+      networkPassphrase: ACTIVE_STELLAR_PASSPHRASE,
+    })
+      .addOperation(contract.call('get'))
+      .setTimeout(StellarSdk.TimeoutInfinite)
+      .build();
+      
+    const fallbackSim = await rpcServer.simulateTransaction(fallbackTx);
+    if (StellarSdk.rpc.Api.isSimulationSuccess(fallbackSim)) {
+      const resultVal = fallbackSim.result?.retval;
+      if (resultVal) {
+        return StellarSdk.scValToNative(resultVal);
+      }
+    }
+
+    throw new Error('Simulation failed. Could not read value from counter contract.');
+  }
+
+  async incrementContractValue(contractId: string): Promise<{ hash: string }> {
+    const sender = this.getAddress();
+    if (!sender) throw new Error('Wallet not connected.');
+
+    const sourceAccount = await server.loadAccount(sender);
+    const contract = new StellarSdk.Contract(contractId);
+
+    // 1. Build initial call transaction
+    let tx = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: '100',
+      networkPassphrase: ACTIVE_STELLAR_PASSPHRASE,
+    })
+      .addOperation(contract.call('increment'))
+      .setTimeout(StellarSdk.TimeoutInfinite)
+      .build();
+
+    // 2. Simulate transaction to calculate fees and footprints
+    const simulation = await rpcServer.simulateTransaction(tx);
+    if (!StellarSdk.rpc.Api.isSimulationSuccess(simulation)) {
+      throw new Error(`Simulation failed: ${simulation.error}`);
+    }
+
+    // 3. Assemble final transaction with simulation results
+    tx = rpcServer.assembleTransaction(tx, simulation) as any;
+
+    const xdr = tx.toXDR();
+
+    // 4. Request wallet to sign the transaction
+    const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
+      networkPassphrase: ACTIVE_STELLAR_PASSPHRASE,
+      address: sender,
+    });
+
+    // 5. Submit signed transaction to RPC server
+    const txToSubmit = StellarSdk.TransactionBuilder.fromXDR(signedTxXdr, ACTIVE_STELLAR_PASSPHRASE);
+    const sendResponse = await rpcServer.sendTransaction(txToSubmit) as any;
+    
+    if (sendResponse.status === 'ERROR') {
+      throw new Error(`RPC submission error: ${JSON.stringify(sendResponse.errorResult)}`);
+    }
+
+    const txHash = sendResponse.hash;
+
+    // 6. Poll transaction status until complete
+    let status = sendResponse.status;
+    let attempts = 0;
+    while (status === 'PENDING' && attempts < 10) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const getTxResponse = await rpcServer.getTransaction(txHash) as any;
+      status = getTxResponse.status;
+      if (status === 'SUCCESS') {
+        return { hash: txHash };
+      }
+      if (status === 'FAILED') {
+        throw new Error('Transaction execution failed.');
+      }
+      attempts++;
+    }
+
+    if (status === 'PENDING') {
+      throw new Error('Transaction execution timed out.');
+    }
+
+    return { hash: txHash };
   }
 }

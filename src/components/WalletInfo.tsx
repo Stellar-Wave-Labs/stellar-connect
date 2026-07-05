@@ -32,6 +32,8 @@ const WalletInfo: React.FC = () => {
     sendTransaction,
     addTrustline,
     fundAccount,
+    getContractValue,
+    incrementContractValue,
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
@@ -54,6 +56,14 @@ const WalletInfo: React.FC = () => {
 
   // Friendbot Funding State
   const [funding, setFunding] = useState(false);
+
+  // Form State - Soroban Contract
+  const [contractId, setContractId] = useState('CA3D5AJLEKNN24YSK2FTC5WDZHG67HK2Z27CXG5I434YPB27TQDAQCX7');
+  const [contractValue, setContractValue] = useState<number | null>(null);
+  const [contractLoading, setContractLoading] = useState(false);
+  const [contractTxHash, setContractTxHash] = useState<string | null>(null);
+  const [contractError, setContractError] = useState<string | null>(null);
+  const [contractStatusText, setContractStatusText] = useState<string | null>(null);
 
   const activeBalance = balances[selectedAssetIndex] || null;
 
@@ -78,6 +88,10 @@ const WalletInfo: React.FC = () => {
     setTrustIssuer('');
     setTrustSuccessHash(null);
     setTrustError(null);
+    setContractValue(null);
+    setContractTxHash(null);
+    setContractError(null);
+    setContractStatusText(null);
   }, [address]);
 
   const copyAddress = async () => {
@@ -162,6 +176,51 @@ const WalletInfo: React.FC = () => {
       console.error(e);
     } finally {
       setFunding(false);
+    }
+  };
+
+  const handleFetchContractValue = async () => {
+    if (!contractId) return;
+    setContractLoading(true);
+    setContractError(null);
+    setContractTxHash(null);
+    setContractStatusText('Simulating read call...');
+    try {
+      const val = await getContractValue(contractId);
+      setContractValue(val);
+    } catch (e) {
+      console.error(e);
+      setContractError(e instanceof Error ? e.message : 'Failed to read contract value.');
+    } finally {
+      setContractLoading(false);
+      setContractStatusText(null);
+    }
+  };
+
+  const handleIncrementContract = async () => {
+    if (!contractId) return;
+    setContractLoading(true);
+    setContractError(null);
+    setContractTxHash(null);
+    try {
+      setContractStatusText('Simulating transaction footprint...');
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      
+      setContractStatusText('Awaiting wallet signature...');
+      const result = await incrementContractValue(contractId);
+      
+      setContractStatusText('Submitting and polling ledger...');
+      setContractTxHash(result.hash);
+      
+      // Auto-fetch new value
+      const val = await getContractValue(contractId);
+      setContractValue(val);
+    } catch (e) {
+      console.error(e);
+      setContractError(e instanceof Error ? e.message : 'Contract transaction failed.');
+    } finally {
+      setContractLoading(false);
+      setContractStatusText(null);
     }
   };
 
@@ -542,6 +601,96 @@ const WalletInfo: React.FC = () => {
                   >
                     Establish Trustline
                   </ActionButton>
+                </div>
+              </div>
+            </Grid>
+
+            {/* Soroban Smart Contract Counter Card */}
+            <Grid xs={24} md={12}>
+              <div className="w-full bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-700 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 h-full flex flex-col justify-between">
+                <div>
+                  <Text small type="secondary" className="flex items-center gap-2 mb-3">
+                    <Send className="w-4 h-4" />
+                    Soroban WASM Smart Contract Counter
+                  </Text>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs text-text-secondary mb-1">Counter Contract ID</label>
+                      <input
+                        type="text"
+                        value={contractId}
+                        onChange={(e) => {
+                          setContractId(e.target.value);
+                          setContractError(null);
+                          setContractTxHash(null);
+                        }}
+                        placeholder="C..."
+                        className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-base-blue text-sm font-mono text-text-primary"
+                      />
+                    </div>
+
+                    {contractValue !== null && (
+                      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 p-4 rounded-xl text-center">
+                        <Text small type="secondary" className="mb-0 block">Current Counter Value</Text>
+                        <Text h2 className="mb-0 mt-1 font-bold text-base-blue">{contractValue}</Text>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-4">
+                  {contractStatusText && (
+                    <div className="text-xs text-text-accent font-semibold bg-base-blue/5 border border-base-blue/15 p-3 rounded-xl flex items-center gap-2">
+                      <RefreshCw className="w-4 h-4 shrink-0 animate-spin" />
+                      <span>{contractStatusText}</span>
+                    </div>
+                  )}
+
+                  {contractError && (
+                    <div className="text-xs text-error font-medium bg-error/10 border border-error/20 p-3 rounded-xl flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{contractError}</span>
+                    </div>
+                  )}
+
+                  {contractTxHash && (
+                    <div className="text-xs text-success font-medium bg-success/10 border border-success/20 p-3 rounded-xl flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 shrink-0" />
+                        <span>Increment Successful!</span>
+                      </div>
+                      <a
+                        href={`https://stellar.expert/explorer/testnet/tx/${contractTxHash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-base-blue underline font-mono break-all mt-1 inline-flex items-center gap-1"
+                      >
+                        View on Explorer <ExternalLink size={12} />
+                      </a>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <ActionButton
+                      auto
+                      className="flex-1"
+                      onClick={handleFetchContractValue}
+                      disabled={!contractId || contractLoading}
+                    >
+                      Fetch Value
+                    </ActionButton>
+                    <ActionButton
+                      auto
+                      className="flex-1"
+                      type="secondary"
+                      loading={contractLoading && !contractStatusText?.includes('read')}
+                      onClick={handleIncrementContract}
+                      disabled={!contractId || contractLoading}
+                    >
+                      Increment
+                    </ActionButton>
+                  </div>
                 </div>
               </div>
             </Grid>
