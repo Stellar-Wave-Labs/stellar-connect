@@ -31,6 +31,7 @@ const WalletInfo: React.FC = () => {
     refreshPayments,
     sendTransaction,
     addTrustline,
+    fundAccount,
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
@@ -50,6 +51,9 @@ const WalletInfo: React.FC = () => {
   const [trustLoading, setTrustLoading] = useState(false);
   const [trustSuccessHash, setTrustSuccessHash] = useState<string | null>(null);
   const [trustError, setTrustError] = useState<string | null>(null);
+
+  // Friendbot Funding State
+  const [funding, setFunding] = useState(false);
 
   const activeBalance = balances[selectedAssetIndex] || null;
 
@@ -147,6 +151,17 @@ const WalletInfo: React.FC = () => {
       setTrustError(e instanceof Error ? e.message : 'Failed to establish trustline.');
     } finally {
       setTrustLoading(false);
+    }
+  };
+
+  const handleFriendbotFund = async () => {
+    setFunding(true);
+    try {
+      await fundAccount();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setFunding(false);
     }
   };
 
@@ -272,16 +287,28 @@ const WalletInfo: React.FC = () => {
                     <Coins className="w-4 h-4" />
                     Balances
                   </Text>
-                  <ActionButton
-                    auto
-                    scale={0.7}
-                    icon={<RefreshCw size={12} className={isFetching ? 'animate-spin' : ''} />}
-                    loading={isFetching}
-                    onClick={refreshBalance}
-                    type="secondary"
-                  >
-                    Refresh
-                  </ActionButton>
+                  <div className="flex gap-2">
+                    <ActionButton
+                      auto
+                      scale={0.7}
+                      onClick={handleFriendbotFund}
+                      loading={funding}
+                      type="success"
+                      title="Fund this wallet with 10k Testnet XLM"
+                    >
+                      Friendbot
+                    </ActionButton>
+                    <ActionButton
+                      auto
+                      scale={0.7}
+                      icon={<RefreshCw size={12} className={isFetching ? 'animate-spin' : ''} />}
+                      loading={isFetching}
+                      onClick={refreshBalance}
+                      type="secondary"
+                    >
+                      Refresh
+                    </ActionButton>
+                  </div>
                 </div>
 
                 <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">

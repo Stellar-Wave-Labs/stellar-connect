@@ -97,3 +97,20 @@ export async function getRecentPayments(address: string): Promise<PaymentRecord[
     return [];
   }
 }
+
+/**
+ * Calls Stellar's Friendbot testnet service to fund an account.
+ */
+export async function fundWithFriendbot(address: string): Promise<boolean> {
+  try {
+    const url = `https://friendbot.stellar.org/?addr=${encodeURIComponent(address)}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Friendbot failed with status: ${response.status}`);
+    }
+    return true;
+  } catch (error) {
+    console.error('Failed to fund account using Friendbot:', error);
+    throw error;
+  }
+}
