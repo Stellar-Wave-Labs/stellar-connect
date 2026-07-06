@@ -6,6 +6,7 @@ export class FreighterMockService {
   constructor(page: Page) {
     this.page = page;
   }
+// setup the Freighter mock by injecting a script into the page context based on stellar kit's freighter mock implementation. This will override the global `window.freighter` object with a mock implementation that simulates the behavior of the Freighter wallet.
 
   async setupMock() {
     await this.page.addInitScript(`
@@ -15,7 +16,7 @@ export class FreighterMockService {
         },
         
         requestAccess: function() { 
-          return Promise.resolve({}); // Nincs hiba, tehát üres objektum
+          return Promise.resolve({});
         },
         
         getAddress: function() { 

@@ -10,6 +10,8 @@ type StellarFixtures = {
     freighterMockService: FreighterMockService;
 };
 
+// Extend the base test with our custom fixtures
+
 export const test = base.extend<StellarFixtures>({
     
     landingPage: async ({ page }, use) => {

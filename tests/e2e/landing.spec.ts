@@ -2,6 +2,7 @@ import { test, expect } from '../e2e/fixtures/stellar.fixture';
 
 test.describe('StellarConnect - Authentication Flow', () => {
 
+    // Before each test, set up event listeners to log any React errors or console messages from the browser context for easier debugging
   test.beforeEach(async ({ page }) => {
     page.on('pageerror', error => console.log('🔴 REACT ERROR:', error.message));
     page.on('console', msg => {
@@ -11,11 +12,13 @@ test.describe('StellarConnect - Authentication Flow', () => {
     });
   });
 
+  // Test to verify that the landing page renders correctly and the "Connect Wallet" button is visible
   test('should render the landing page and show the connect button', async ({ landingPage }) => {
     await landingPage.navigate();
     await expect(landingPage.isConnectButtonVisible()).resolves.toBe(true);
   });
 
+  // Test to verify that the Freighter wallet can be successfully connected using the mocked implementation
   test('should successfully connect using mocked Freighter wallet', async ({ 
     page,
     freighterMockService, 
@@ -32,6 +35,7 @@ test.describe('StellarConnect - Authentication Flow', () => {
     await expect(modalContainer).toBeHidden({ timeout: 5000 });
   });
 
+  // Test to verify that the xBull wallet fallback popup opens correctly when the wallet is not installed
   test('should open xBull fallback popup when wallet is not installed', async ({ 
     page, 
     landingPage 
