@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base } from '@playwright/test';
 import { LandingPage } from '../../pages/LandingPage';
 import { ConnectWalletModal } from '../../pages/ConnectWalletModal';
