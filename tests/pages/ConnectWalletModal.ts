@@ -11,14 +11,14 @@ export class ConnectWalletModal {
     this.xBullButton = page.locator('li').filter({ hasText: 'xBull' });
   }
 
+  // Wait for the modal to be visible
   async selectFreighter() {
-    const target = this.freighterButton.locator('p');
-    
-    await target.waitFor({ state: 'visible' });
-    await this.page.waitForTimeout(1000);
-    await target.click({ force: true });
+
+    await this.freighterButton.waitFor({ state: 'visible' });
+    await this.freighterButton.click({ force: true });
   }
 
+  // Wait for the modal to be visible
   async selectXBull() {
     await this.xBullButton.waitFor({ state: 'visible' });
     await this.xBullButton.click({ force: true }); 

@@ -124,6 +124,27 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
+### Testing
+
+This project uses **Playwright** for end-to-end (E2E) testing.
+
+#### Running Tests
+* **Run all E2E tests (headless):**
+    ```bash
+    npm run e2e
+    ```
+* **Run E2E tests in UI mode (interactive):**
+    ```bash
+    npm run e2e:ui
+    ```
+* **Run E2E tests in headed mode (visible browser):**
+    ```bash
+    npm run e2e:headed
+    ```
+
+#### CI/CD
+The project includes a GitHub Actions workflow that automatically runs these tests on every `push` and `pull_request` to `main` and `dev` branches.
+
 ## 🔧 Environment Configuration
 
 Create a `.env` file (or copy `.env.example`) in the project root:
