@@ -26,7 +26,7 @@ export class FreighterMockService {
           return Promise.resolve({ network: 'TESTNET', networkPassphrase: 'Test SDF Network ; September 2015' }); 
         }
       };
-      console.log('--- FREIGHTER MOCK ACTIVATED ---');
+      console.log('--- FREIGHTER MOCK IN USE ---');
     `);
   }
 }
